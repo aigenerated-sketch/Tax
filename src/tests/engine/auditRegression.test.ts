@@ -3,7 +3,7 @@
  * "Audit findings"). Each test was run against the pre-fix code (commit 104f591) and failed there.
  * Expected values are hand-worked from statute/GOV.UK, not produced by the engine.
  */
-import { assessChildcare, calculateScenario, defaultChildcare, type CalculatorInputs, type ChildcareInputs, type PensionMethod } from '../../engine';
+import { annualAllowanceCheck, assessChildcare, calculateScenario, defaultChildcare, emptyPension, type CalculatorInputs, type ChildcareInputs, type PensionMethod } from '../../engine';
 import { defaultFormState, parseForm } from '../../lib/form';
 import { inputs, p, R26, salaryOnly } from '../helpers';
 
@@ -140,5 +140,35 @@ describe('F7 verification status is reported per dimension', () => {
     expect(v.ratesAndThresholds).toBe('verified-official');
     expect(v.externalValidation).toBe('not-done');
     expect(v.legalRules).not.toBe('verified-official');
+  });
+});
+
+/**
+ * F9 (Low — reporting). With the MPAA in force and DC savings above £10,000, unused allowance can be
+ * carried forward only into the alternative annual allowance for DB savings (PTM055100). The excess
+ * was already right; `carryForwardUsed` used a general formula and could report carry-forward as
+ * used against DC savings. AA £60,000, MPAA £10,000 → alternative £50,000; verified carry-forward £20,000.
+ */
+describe('F9 carry-forward used is reported correctly when the MPAA applies', () => {
+  const check = (dc: number, db: number) =>
+    annualAllowanceCheck({
+      rules: R26,
+      allowance: { definedBenefitMember: db > 0, definedBenefitPensionInput: p(db), otherPersonalRasGross: 0, otherEmployerContributions: 0, mpaaTriggered: 'yes', carryForward: p(20_000) },
+      pension: { ...emptyPension(), employerOther: p(dc) },
+      rasRelievedGross: 0,
+      rasGross: 0,
+      netIncome: p(100_000),
+      chargeFor: () => 0,
+    });
+  it.each([
+    // [DC, DB, excess, carry-forward used]
+    [70_000, 0, 60_000, 0], // all excess is DC above the MPAA; carry-forward cannot help
+    [15_000, 55_000, 5_000, 5_000], // DB 55k − alternative 50k = 5k covered by carry-forward
+    [15_000, 75_000, 10_000, 20_000], // DB over alternative by 25k; 20k carry-forward used; 5k DC + 5k DB excess
+    [8_000, 60_000, 0, 8_000], // DC within MPAA → standard test: 68k − 60k = 8k carry-forward
+  ])('DC £%d, DB £%d → excess £%d, carry-forward used £%d', (dc, db, excess, used) => {
+    const r = check(dc, db);
+    expect(r.excess).toBe(p(excess));
+    expect(r.carryForwardUsed).toBe(p(used));
   });
 });

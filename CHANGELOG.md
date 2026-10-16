@@ -10,6 +10,7 @@
 - F8: personal allowance allocated by ITA s25(2) "greatest reduction" (no numeric change found for 2026/27).
 - Exact integer basis-point rounding; independent reference calculator, sweeps, optimiser validity and boundary tests (463 tests).
 - PSA for Scottish taxpayers and Gift Aid in the annual allowance taper confirmed from legislation.
+- F9 (review follow-up): carry-forward used is reported correctly when the MPAA applies (PTM055100).
 
 ## 1.1.0 — 2026-10-16
 

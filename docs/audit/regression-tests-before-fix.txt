@@ -11,3 +11,8 @@ Run against commit 104f591 (pre-fix) on 2026-10-16
    × F7 verification status is reported per dimension > 2026/27 separates source, legal-rule, test and external validation status
 ⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
       Tests  10 failed (10)
+
+Run against commit be4690a (before F9 fix) on 2026-10-16
+   × F9 carry-forward used is reported correctly when the MPAA applies > DC £70000, DB £0 → excess £60000, carry-forward used £0
+   × F9 carry-forward used is reported correctly when the MPAA applies > DC £15000, DB £55000 → excess £5000, carry-forward used £5000
+      Tests  2 failed | 12 passed (14)

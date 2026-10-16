@@ -56,11 +56,16 @@ export function annualAllowanceCheck(input: AnnualAllowanceInput): AnnualAllowan
 
   let excess: Pence;
   let totalAvailable: Pence;
+  let cfUsed: Pence;
   if (mpaaApplies && pensionInputDc > p.moneyPurchaseAnnualAllowance) {
+    // PTM055100: carry-forward cannot be added to the MPAA, only to the alternative allowance (DB savings).
     const alternative = nonNeg(allowanceAfterTaper - p.moneyPurchaseAnnualAllowance);
-    excess = pensionInputDc - p.moneyPurchaseAnnualAllowance + nonNeg(pensionInputDb - alternative - cfAmount);
+    const dbOverAlternative = nonNeg(pensionInputDb - alternative);
+    cfUsed = Math.min(cfAmount, dbOverAlternative);
+    excess = pensionInputDc - p.moneyPurchaseAnnualAllowance + (dbOverAlternative - cfUsed);
     totalAvailable = p.moneyPurchaseAnnualAllowance + alternative + cfAmount;
   } else {
+    cfUsed = Math.min(cfAmount, nonNeg(pensionInputTotal - allowanceAfterTaper));
     totalAvailable = allowanceAfterTaper + cfAmount;
     excess = nonNeg(pensionInputTotal - totalAvailable);
   }
@@ -72,7 +77,7 @@ export function annualAllowanceCheck(input: AnnualAllowanceInput): AnnualAllowan
     taperApplies,
     allowanceAfterTaper,
     mpaaApplies,
-    carryForwardUsed: cf === null ? null : Math.min(cfAmount, nonNeg(pensionInputTotal - allowanceAfterTaper)),
+    carryForwardUsed: cf === null ? null : cfUsed,
     totalAvailable,
     pensionInputDc,
     pensionInputDb,
