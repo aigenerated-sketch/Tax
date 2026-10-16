@@ -385,6 +385,16 @@ export function InputPanel({ form, errors, set }: Props) {
               onChange={(v) => set('definedBenefitPensionInput', v)}
             />
           )}
+          {form.definedBenefitMember && (
+            <MoneyField
+              name="definedBenefitMemberContributions"
+              label="Your own contributions to the defined benefit scheme this year"
+              hint="Deducted from pay before tax. Enter them here, not as an existing contribution above, so they are not counted twice."
+              value={form.definedBenefitMemberContributions}
+              error={errors.definedBenefitMemberContributions}
+              onChange={(v) => set('definedBenefitMemberContributions', v)}
+            />
+          )}
           <MoneyField
             name="otherPersonalRasGross"
             label="Other personal pension contributions you already make (gross)"

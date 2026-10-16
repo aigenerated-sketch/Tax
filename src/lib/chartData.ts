@@ -11,7 +11,7 @@ export interface ChartSegment {
  * Segments sum to: gross pay & income + basic-rate top-up + employer contributions.
  */
 export function chartSegments(s: ScenarioResult): ChartSegment[] {
-  const employeeCashPension = s.pension.salarySacrifice + s.pension.netPay + s.rasCashPaid;
+  const employeeCashPension = s.employeePensionCash;
   // Gross relief-at-source contributions minus what the employee actually paid = provider's basic-rate top-up.
   const topUp = s.pension.rasWorkplaceGross + s.pension.rasPersonalGross - s.rasCashPaid;
   return [

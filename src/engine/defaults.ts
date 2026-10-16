@@ -45,6 +45,6 @@ export const emptyInputs = (): CalculatorInputs => ({
   giftAidNet: 0,
   studentLoan: { plan: 'none', postgraduate: false },
   childBenefitAnnual: 0,
-  pensionAllowance: { definedBenefitMember: false, definedBenefitPensionInput: 0, otherPersonalRasGross: 0, otherEmployerContributions: 0, mpaaTriggered: 'no', carryForward: 0 },
+  pensionAllowance: { definedBenefitMember: false, definedBenefitPensionInput: 0, definedBenefitMemberContributions: 0, otherPersonalRasGross: 0, otherEmployerContributions: 0, mpaaTriggered: 'no', carryForward: 0 },
   childcare: defaultChildcare(),
 });

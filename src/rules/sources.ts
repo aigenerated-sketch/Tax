@@ -88,6 +88,9 @@ export const SOURCES = {
   faS188: { id: 'fa-2004-s188', title: 'Finance Act 2004 s188: relief for contributions — relievable pension contributions (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/188' },
   faS228ZA: { id: 'fa-2004-s228za', title: 'Finance Act 2004 s228ZA: tapered reduction of annual allowance (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/228ZA' },
   faS233: { id: 'fa-2004-s233', title: 'Finance Act 2004 s233: pension input amounts, other money purchase arrangements (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/233' },
+  faS227ZA: { id: 'fa-2004-s227za', title: 'Finance Act 2004 s227ZA: money purchase annual allowance — chargeable amount (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/227ZA' },
+  faS227B: { id: 'fa-2004-s227b', title: 'Finance Act 2004 s227B: alternative chargeable amount (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/227B' },
+  ptmReducedNetIncome: { id: 'ptm056120', title: 'HMRC Pensions Tax Manual PTM056120: annual allowance charge — reduced net income', url: 'https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm056120' },
   budgetAnnex: {
     id: 'budget-2025-annex-a',
     title: 'Budget 2025 overview of tax legislation and rates, Annex A: rates and allowances (GOV.UK)',

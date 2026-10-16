@@ -137,7 +137,7 @@ rendered on `/methodology` and in the printed report.
 
 ## Testing
 
-`npm test` runs 482 tests: personal allowance taper points; every band boundary (below / at /
+`npm test` runs 496 tests: personal allowance taper points; every band boundary (below / at /
 above) for rUK and Scotland, plus 2025/26 Scottish limits; NI thresholds; savings/dividend
 ordering; all four methods at an equivalent £10,000 gross; existing and employer contributions;
 optimiser (already met, lower target, Gift Aid, infeasible); RAS relief limit; Scottish relief;

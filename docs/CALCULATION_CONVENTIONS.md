@@ -101,7 +101,7 @@ rounded to the penny. Salary sacrifice changes NI; net pay and RAS do not.
 
 ## 5. Take-home and the change in take-home
 
-`Take-home = (E_NI + P + O + Sv + D) − NP − RAS cash − Income Tax (final) − employee NI − student loan`
+`Take-home = (E_NI + P + O + Sv + D) − NP − DB member contributions − RAS cash − Income Tax (final) − employee NI − student loan`
 
 where `RAS cash = round(0.8 × G_ras,rel) + (G_ras − G_ras,rel)`. Gift Aid donations, Child
 Benefit and the HICBC are **excluded** from take-home and shown separately.
@@ -110,7 +110,7 @@ The change in take-home between two scenarios decomposes exactly as
 
 `Δ take-home = − Δ(pay given up or paid into pension) + Income Tax saved + employee NI saved + student loan saved`
 
-where pay given up or paid into pension = `SS + NP + RAS cash`. The UI shows these
+where pay given up or paid into pension = `SS + NP + DB member contributions + RAS cash`. The UI shows these
 components separately; childcare value is never part of them.
 
 ## 6. Annual allowance (estimate)
@@ -126,7 +126,20 @@ collected, so this can overstate adjusted income for DB members).
 Taper when threshold income > £200,000 **and** adjusted income > £260,000; £1 per complete £2,
 minimum £10,000. MPAA (if triggered and DC > £10,000): DC excess charged; DB tested against the
 alternative allowance; carry-forward only adds to the alternative allowance (PTM055100).
-Charge = extra Income Tax when the excess is added on top of non-savings income.
+**DB member contributions** (`definedBenefitMemberContributions`) are net pay for tax, ANI and the relief
+limit, but are already inside the DB pension input, so they are not DC input and are not added back in
+adjusted income (s228ZA(4): + net-pay deductions + total PIA − contributions paid by the individual).
+
+**Chargeable amount (MPAA).** Default = total input − (allowance + carry-forward) (s227ZA). If the MPAA
+applies and DC input > £10,000, alternative = (DC − £10,000) + (DB − (allowance + carry-forward −
+£10,000)) (s227B); it is used only if it exceeds the default (s227ZA). Carry-forward used is reported
+on the same basis.
+
+**Charge** (PTM056110/PTM056120): the excess is stacked on *reduced net income* = total taxable income
+after the personal allowance (savings and dividends included) and charged at the main rates of the
+band it falls in (rUK 20/40/45; Scottish rates for Scottish taxpayers with the starter rate replaced by
+the Scottish basic rate). The personal allowance never shelters the excess; band limits are extended
+by RAS and Gift Aid as for income.
 
 ## 7. Childcare
 

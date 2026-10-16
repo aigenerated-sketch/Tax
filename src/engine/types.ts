@@ -71,6 +71,12 @@ export interface PensionAllowanceInputs {
   /** Pension input amount for a DB scheme for the year, if known (from scheme statement). */
   definedBenefitPensionInput: Pence;
   /**
+   * The member's own contributions to the DB scheme, deducted from pay before tax (net pay). They reduce
+   * taxable pay and ANI and use the relief limit, but are already inside the DB pension input, so they are
+   * not DC pension input and are not added back in adjusted income (FA 2004 s228ZA(4)).
+   */
+  definedBenefitMemberContributions: Pence;
+  /**
    * Personal relief-at-source contributions to OTHER schemes (e.g. an existing SIPP alongside a
    * workplace scheme), gross. Treated exactly like an existing relief-at-source contribution:
    * reduces ANI, extends bands, shares the relief limit, costs 80% in cash, counts for the AA.
@@ -214,6 +220,12 @@ export interface AnnualAllowanceResult {
   allowanceAfterTaper: Pence;
   mpaaApplies: boolean;
   carryForwardUsed: Pence | null;
+  /** FA 2004 s227ZA default chargeable amount. */
+  defaultChargeable: Pence;
+  /** s227B alternative chargeable amount; null when the MPAA does not bite. */
+  alternativeChargeable: Pence | null;
+  /** True when the alternative amount exceeded the default and was used. */
+  alternativeUsed: boolean;
   totalAvailable: Pence;
   pensionInputDc: Pence;
   pensionInputDb: Pence;
@@ -268,7 +280,9 @@ export interface ScenarioResult {
   rasRelievedGross: Pence;
   /** Cash paid by the employee into relief-at-source pensions (net of the basic-rate top-up). */
   rasCashPaid: Pence;
-  /** Pay given up or cash paid into pensions by the employee: sacrifice + net pay + RAS cash (conventions §5). */
+  /** DB member contributions deducted from pay (0 unless a DB member). */
+  dbMemberContributions: Pence;
+  /** Pay given up or cash paid into pensions by the employee: sacrifice + net pay + DB contributions + RAS cash (conventions §5). */
   employeePensionCash: Pence;
   /** Gross pension contribution funded by the employee (sacrifice + net pay + RAS gross). */
   employeeFundedGross: Pence;

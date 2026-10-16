@@ -153,7 +153,7 @@ describe('F9 carry-forward used is reported correctly when the MPAA applies', ()
   const check = (dc: number, db: number) =>
     annualAllowanceCheck({
       rules: R26,
-      allowance: { definedBenefitMember: db > 0, definedBenefitPensionInput: p(db), otherPersonalRasGross: 0, otherEmployerContributions: 0, mpaaTriggered: 'yes', carryForward: p(20_000) },
+      allowance: { definedBenefitMember: db > 0, definedBenefitPensionInput: p(db), definedBenefitMemberContributions: 0, otherPersonalRasGross: 0, otherEmployerContributions: 0, mpaaTriggered: 'yes', carryForward: p(20_000) },
       pension: { ...emptyPension(), employerOther: p(dc) },
       rasRelievedGross: 0,
       rasGross: 0,

@@ -77,6 +77,7 @@ export function validateInputs(i: CalculatorInputs): string[] {
   money('giftAidNet', i.giftAidNet);
   money('childBenefitAnnual', i.childBenefitAnnual);
   money('pensionAllowance.definedBenefitPensionInput', i.pensionAllowance.definedBenefitPensionInput);
+  money('pensionAllowance.definedBenefitMemberContributions', i.pensionAllowance.definedBenefitMemberContributions);
   money('pensionAllowance.otherPersonalRasGross', i.pensionAllowance.otherPersonalRasGross);
   money('pensionAllowance.otherEmployerContributions', i.pensionAllowance.otherEmployerContributions);
   money('pensionAllowance.carryForward', i.pensionAllowance.carryForward);

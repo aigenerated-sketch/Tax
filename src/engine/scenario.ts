@@ -1,7 +1,7 @@
 import { getRules } from '../rules';
 import type { TaxYearRules } from '../rules/types';
 import { adjustedNetIncome, computeIncomeComponents, grossUpAtBasicRate } from './ani';
-import { annualAllowanceCheck } from './annualAllowance';
+import { annualAllowanceChargeTax, annualAllowanceCheck } from './annualAllowance';
 import { highIncomeChildBenefitCharge } from './hicbc';
 import { calculateIncomeTax } from './incomeTax';
 import { applyRate, moneyText, nonNeg, roundPence } from './money';
@@ -80,18 +80,22 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
     });
     pension = { ...pension, salarySacrifice: contractualPay };
   }
-  if (pension.netPay > contractualPay - pension.salarySacrifice) {
+  let dbMember = inputs.pensionAllowance.definedBenefitMember ? inputs.pensionAllowance.definedBenefitMemberContributions : 0;
+  const payAvailable = contractualPay - pension.salarySacrifice;
+  if (pension.netPay + dbMember > payAvailable) {
     warnings.push({
       id: 'netpay-exceeds-pay',
       severity: 'error',
       category: 'pension',
-      message: 'Net-pay contributions cannot exceed your pay. They have been limited to your pay after any salary sacrifice.',
+      message: 'Net-pay contributions (including any defined benefit contributions) cannot exceed your pay. They have been limited to your pay after any salary sacrifice.',
     });
-    pension = { ...pension, netPay: contractualPay - pension.salarySacrifice };
+    dbMember = Math.min(dbMember, payAvailable);
+    pension = { ...pension, netPay: Math.min(pension.netPay, payAvailable - dbMember) };
   }
 
-  // §1 Income components — the only place these figures are derived.
-  const ic = computeIncomeComponents(inc, pension, probe);
+  // §1 Income components — the only place these figures are derived. DB member contributions are net pay
+  // for tax purposes but are kept out of pension.netPay so they are not DC pension input (§6).
+  const ic = computeIncomeComponents(inc, { salarySacrifice: pension.salarySacrifice, netPay: pension.netPay + dbMember }, probe);
 
   // Employer NI and any share of the salary-sacrifice saving passed to the pension.
   const employerNiNow = employerNi(ic.classOneEarnings, rules);
@@ -104,7 +108,7 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
   // §1.6 Relief-at-source relief limit: higher of UK taxable earnings and the basic amount, shared with net pay.
   const reliefLimit = Math.max(ic.taxableEarnings, rules.pensions.basicAmount);
   const rasGross = pension.rasWorkplaceGross + pension.rasPersonalGross;
-  const rasRelievedGross = Math.min(rasGross, nonNeg(reliefLimit - pension.netPay));
+  const rasRelievedGross = Math.min(rasGross, nonNeg(reliefLimit - pension.netPay - dbMember));
   const rasUnrelieved = rasGross - rasRelievedGross;
   if (rasUnrelieved > 0) {
     warnings.push({
@@ -164,13 +168,13 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
     rasRelievedGross,
     rasGross,
     netIncome: ic.netIncome,
-    chargeFor: (excess) =>
-      calculateIncomeTax({ ...taxBase, nonSavingsIncome: ic.nonSavingsIncome + excess, adjustedNetIncome: ani, bandExtension }).total - incomeTax.total,
+    // PTM056110: excess stacked on reduced net income (taxable income after the personal allowance).
+    chargeFor: (excess) => annualAllowanceChargeTax(excess, incomeTax.totalTaxableIncome, inputs.jurisdiction, rules, bandExtension),
   });
 
   // §5 Cash position.
   const grossCashIncome = ic.classOneEarnings + inc.propertyIncome + inc.otherNonSavingsIncome + inc.savingsInterest + inc.dividends;
-  const takeHome = grossCashIncome - pension.netPay - rasCashPaid - incomeTax.total - ni.total - studentLoan.total;
+  const takeHome = grossCashIncome - pension.netPay - dbMember - rasCashPaid - incomeTax.total - ni.total - studentLoan.total;
   const employeeFundedGross = pension.salarySacrifice + pension.netPay + rasGross;
 
   if (opts.method && isReliefAtSource(opts.method) && reliefToClaim > 0 && additionalGross > 0) {
@@ -202,7 +206,8 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
     pension,
     rasRelievedGross,
     rasCashPaid,
-    employeePensionCash: pension.salarySacrifice + pension.netPay + rasCashPaid,
+    dbMemberContributions: dbMember,
+    employeePensionCash: pension.salarySacrifice + pension.netPay + dbMember + rasCashPaid,
     employeeFundedGross,
     employerContribution: pension.employerOther,
     totalPensionInvestment: employeeFundedGross + pension.employerOther,

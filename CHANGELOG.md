@@ -10,6 +10,8 @@
 - F8: personal allowance allocated by ITA s25(2) "greatest reduction" (no numeric change found for 2026/27).
 - Exact integer basis-point rounding; independent reference calculator, sweeps, optimiser validity and boundary tests (463 tests).
 - PSA for Scottish taxpayers and Gift Aid in the annual allowance taper confirmed from legislation.
+- F11: annual allowance charge stacked on reduced net income after the personal allowance at main rates; Scottish starter rate excluded (PTM056110/056120).
+- F12: explicit s227ZA comparison of default and alternative chargeable amounts (no numeric change). F13: separate input for DB member contributions (no double counting). F10b: infeasibility reason states actual figures.
 - Relief-limit optimiser tests (existing personal RAS using the limit; boundaries at the limit and £3,600); F10: clearer infeasibility reason.
 - F9 (review follow-up): carry-forward used is reported correctly when the MPAA applies (PTM055100).
 

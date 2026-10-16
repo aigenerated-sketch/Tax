@@ -55,6 +55,7 @@ export interface FormState {
 
   definedBenefitMember: boolean;
   definedBenefitPensionInput: string;
+  definedBenefitMemberContributions: string;
   otherPersonalRasGross: string;
   otherEmployerContributions: string;
   mpaaTriggered: YesNoUnsure;
@@ -114,6 +115,7 @@ export const defaultFormState = (): FormState => ({
   childBenefitAnnual: '',
   definedBenefitMember: false,
   definedBenefitPensionInput: '',
+  definedBenefitMemberContributions: '',
   otherPersonalRasGross: '',
   otherEmployerContributions: '',
   mpaaTriggered: 'unsure',
@@ -225,6 +227,7 @@ export function parseForm(f: FormState): ParseResult {
   const giftAidNet = money('giftAidNet', 'Gift Aid donations');
   const childBenefitAnnual = money('childBenefitAnnual', 'Child Benefit');
   const definedBenefitPensionInput = f.definedBenefitMember ? money('definedBenefitPensionInput', 'Defined benefit pension input') : 0;
+  const definedBenefitMemberContributions = f.definedBenefitMember ? money('definedBenefitMemberContributions', 'Your defined benefit contributions') : 0;
   const otherPersonalRasGross = money('otherPersonalRasGross', 'Other personal pension contributions');
   const otherEmployerContributions = money('otherEmployerContributions', 'Employer contributions to other schemes');
   const rules = getRules(f.taxYear);
@@ -271,6 +274,7 @@ export function parseForm(f: FormState): ParseResult {
     pensionAllowance: {
       definedBenefitMember: f.definedBenefitMember,
       definedBenefitPensionInput,
+      definedBenefitMemberContributions,
       otherPersonalRasGross,
       otherEmployerContributions,
       mpaaTriggered: f.mpaaTriggered,

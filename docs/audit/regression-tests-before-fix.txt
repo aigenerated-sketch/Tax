@@ -16,3 +16,32 @@ Run against commit be4690a (before F9 fix) on 2026-10-16
    × F9 carry-forward used is reported correctly when the MPAA applies > DC £70000, DB £0 → excess £60000, carry-forward used £0
    × F9 carry-forward used is reported correctly when the MPAA applies > DC £15000, DB £55000 → excess £5000, carry-forward used £5000
       Tests  2 failed | 12 passed (14)
+
+Run against commit 622f63c (before F10b-F13 fixes) on 2026-10-16: 11 failed | 2 passed (13)
+F11 annual allowance charge follows PTM056110 > (a) personal allowance does not shelter the excess: £10,000 salary, employer £70,000 → excess £10,000 at 20% = £2,000
+AssertionError: expected 148600 to be 200000 // Object.is equality
+F11 annual allowance charge follows PTM056110 > (b) Scotland, low income: lowest rate is the Scottish basic rate 20%, not the 19% starter rate → £2,000
+AssertionError: expected 144633 to be 200000 // Object.is equality
+F11 annual allowance charge follows PTM056110 > (b) Scotland, reduced net income inside the starter band: £14,000 salary, employer £61,000 → £1,000 × 20% = £200
+AssertionError: expected 19000 to be 20000 // Object.is equality
+F11 annual allowance charge follows PTM056110 > (c) excess sits on top of savings and dividends at main rates: £40,000 salary + £20,000 dividends, employer £70,000 → £4,000
+AssertionError: expected 444249 to be 400000 // Object.is equality
+F12 MPAA: alternative chargeable amount used only if it exceeds the default (s227ZA) > DC £15000, DB £0, cf £0 → default £0, alternative £5000, chargeable £5000
+F12 MPAA: alternative chargeable amount used only if it exceeds the default (s227ZA) > DC £12000, DB £30000, cf £20000 → default £0, alternative £2000, chargeable £2000
+AssertionError: expected undefined to be +0 // Object.is equality
+- Expected: 
++ Received: 
+F12 MPAA: alternative chargeable amount used only if it exceeds the default (s227ZA) > DC £15000, DB £60000, cf £0 → default £15000, alternative £15000, chargeable £15000
+AssertionError: expected undefined to be 1500000 // Object.is equality
+- Expected: 
++ Received: 
+F13 defined benefit member contributions are a separate input and not double counted > tax, NI and take-home treat DB contributions as net pay
+AssertionError: expected 12000000 to be 11040000 // Object.is equality
+F13 defined benefit member contributions are a separate input and not double counted > pension input and adjusted income are not double counted
+AssertionError: expected 14500000 to be 13540000 // Object.is equality
+F13 defined benefit member contributions are a separate input and not double counted > taper case: £300,000 salary, DB contributions £24,000, DB input £60,000 → allowance £22,000, excess £38,000
+AssertionError: expected 36000000 to be 33600000 // Object.is equality
+F10b infeasibility explanation states the actual figures > salary sacrifice with the relief limit fully used by an existing SIPP
+AssertionError: expected 'This method also uses up the relief l…' to contain '£36,400'
+Expected: "£36,400"
+Received: "This method also uses up the relief limit for your existing relief-at-source contributions (relevant UK earnings, or £3,600 if higher), so they lose relief as this contribution rises and adjusted net income falls little or not at all."

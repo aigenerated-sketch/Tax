@@ -146,3 +146,25 @@ dividends 9,500 × 10.75% = £1,021.25. £14,000 + £6,000 interest + £1,000 SI
 | £150k, sacrifice £70,000 | charge £10,000 × 40% = £4,000 |
 | £300k; sacrifice £20k; SIPP £10k gross; Gift Aid £5k; employer £10k | net income 280,000; threshold 290,000; adjusted 310,000; allowance £35,000 |
 | £110k; net pay £5k; other SIPP £4k gross; other employer £2k; extra SIPP £3k | ANI £98,000; PIA £14,000; band extension £7,000; RAS cash £5,600; adjusted income £112,000 (no extra SIPP) |
+
+## Review follow-up cases (after 622f63c)
+
+**Annual allowance charge (PTM056110/PTM056120).** Employer contributions create the excess; no carry-forward.
+
+| Inputs | Working | Charge |
+|---|---|---|
+| £10,000 salary, employer £70,000 | reduced net income 0 (PA not available to the excess); 10,000 × 20% | £2,000 |
+| Same, Scotland | lowest rate is the Scottish basic rate | £2,000 |
+| Scotland £14,000, employer £61,000 | reduced net income 1,430 (starter band); 1,000 × 20% | £200 |
+| Scotland £30,000, employer £70,000 | 17,430 → 27,430 in the intermediate band; 10,000 × 21% | £2,100 |
+| £40,000 + £20,000 dividends, employer £70,000 | reduced net income 47,430 > 37,700; 10,000 × 40% | £4,000 |
+| £45,000, SIPP £5,000 gross, employer £60,000 | excess 5,000; basic limit 42,700; reduced net income 32,430 → 5,000 × 20% | £1,000 |
+
+**MPAA comparison (s227ZA/s227B).** DC £15k, DB £0 → default £0, alternative £5k → £5k. DC £15k, DB £60k →
+default £15k, alternative £10k + £5k = £15k → equal, default kept, £15k. DC £12k, DB £30k, cf £20k → default 0,
+alternative allowance £70k → alternative £2k → £2k.
+
+**DB member contributions (s228ZA(4)).** £120,000 salary, DB contributions £9,600, DB input £25,000: ANI £110,400;
+PA £7,370; tax 7,540 + 65,330 × 40% = £33,672; NI £4,410.60; take-home £72,317.40; DC input £0; total input £25,000;
+adjusted income £135,400. £300,000 salary, DB contributions £24,000, DB input £60,000: adjusted income £336,000 →
+allowance £22,000 → excess £38,000.

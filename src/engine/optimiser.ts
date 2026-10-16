@@ -1,4 +1,4 @@
-import { nonNeg } from './money';
+import { moneyText, nonNeg } from './money';
 import { calculateScenario, rulesFor } from './scenario';
 import type { CalculatorInputs, OptimiserResult, Pence, PensionMethod } from './types';
 
@@ -19,11 +19,11 @@ export function maxFeasibleAdditional(inputs: CalculatorInputs, method: PensionM
     case 'salary-sacrifice':
       return nonNeg(cashPay);
     case 'net-pay':
-      return nonNeg(cashPay - base.pension.netPay);
+      return nonNeg(cashPay - base.pension.netPay - base.dbMemberContributions);
     case 'ras-workplace':
     case 'ras-sipp': {
       const limit = Math.max(cashPay + inputs.income.taxableBenefits, rules.pensions.basicAmount);
-      return nonNeg(limit - base.pension.netPay - base.pension.rasWorkplaceGross - base.pension.rasPersonalGross);
+      return nonNeg(limit - base.pension.netPay - base.dbMemberContributions - base.pension.rasWorkplaceGross - base.pension.rasPersonalGross);
     }
   }
 }
@@ -57,10 +57,11 @@ export function requiredContribution(inputs: CalculatorInputs, method: PensionMe
       // relief-at-source contributions can lose relief as this method's contribution rises.
       const base = calculateScenario(inputs, { label: 'base', method: null, additionalGross: 0 });
       const atMax = calculateScenario(inputs, { label: 'max', method, additionalGross: maxFeasibleGross });
+      const reliefLost = base.rasRelievedGross - atMax.rasRelievedGross;
       result.reason =
-        atMax.rasRelievedGross < base.rasRelievedGross
-          ? 'This method also uses up the relief limit for your existing relief-at-source contributions (relevant UK earnings, or £3,600 if higher), so they lose relief as this contribution rises and adjusted net income falls little or not at all.'
-          : 'Your employment pay is not large enough for this method alone to reach the target (other income still counts towards adjusted net income).';
+        reliefLost > 0
+          ? `At the maximum ${moneyText(maxFeasibleGross)} for this method, your existing relief-at-source contributions lose ${moneyText(reliefLost)} of relief, because their relief is limited to your UK taxable earnings (or £3,600 if higher) and this method reduces those earnings or uses the same limit. Adjusted net income would fall by only ${moneyText(base.adjustedNetIncome - atMax.adjustedNetIncome)}, to ${moneyText(atMax.adjustedNetIncome)}, which is still above the target.`
+          : `Your employment pay is not large enough for this method alone to reach the target: at the maximum ${moneyText(maxFeasibleGross)}, adjusted net income is still ${moneyText(atMax.adjustedNetIncome)} (other income still counts).`;
     } else {
       result.reason =
         'Tax-relievable personal contributions are limited to your relevant UK earnings (or £3,600 if higher), so this method alone cannot reach the target.';

@@ -19,7 +19,7 @@ export interface IncomeTaxInput {
   bandExtension: Pence;
 }
 
-interface Segment {
+export interface Segment {
   /** Upper limit of this segment in taxable-income terms; null = unlimited. */
   upTo: Pence | null;
   rate: number;
@@ -27,7 +27,7 @@ interface Segment {
 }
 
 /** Tax `amount` of income sitting on top of `start` against an ordered list of segments. */
-function sliceAgainst(
+export function sliceAgainst(
   start: Pence,
   amount: Pence,
   segments: Segment[],
@@ -54,7 +54,7 @@ function sliceAgainst(
   return out;
 }
 
-function extendBands(bands: TaxBand[], startIndex: number, extension: Pence): Segment[] {
+export function extendBands(bands: TaxBand[], startIndex: number, extension: Pence): Segment[] {
   return bands.map((b, i) => ({
     label: b.label,
     rate: b.rate,

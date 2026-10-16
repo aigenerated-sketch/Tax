@@ -180,4 +180,13 @@ describe('calculator UI', () => {
     await user.type(screen.getByLabelText(/Other personal pension contributions you already make/), '4000');
     expect(screen.getByTestId('current-ani')).toHaveTextContent('£106,000');
   });
+
+  it('F13: DB members enter their own contributions separately; they reduce adjusted net income once', async () => {
+    const user = userEvent.setup();
+    setup({ salary: '120000' });
+    await user.click(screen.getByText('Pension annual allowance details'));
+    await user.click(screen.getByLabelText(/defined benefit \(final salary/));
+    await user.type(screen.getByLabelText(/Your own contributions to the defined benefit scheme/), '9600');
+    expect(screen.getByTestId('current-ani')).toHaveTextContent('£110,400');
+  });
 });
