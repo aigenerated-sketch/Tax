@@ -52,10 +52,19 @@ export function requiredContribution(inputs: CalculatorInputs, method: PensionMe
   if (aniAt(maxFeasibleGross) > target) {
     result.feasible = false;
     result.requiredGross = maxFeasibleGross;
-    result.reason =
-      method === 'salary-sacrifice' || method === 'net-pay'
-        ? 'Your employment pay is not large enough for this method alone to reach the target (other income still counts towards adjusted net income).'
-        : 'Tax-relievable personal contributions are limited to your relevant UK earnings (or £3,600 if higher), so this method alone cannot reach the target.';
+    if (method === 'salary-sacrifice' || method === 'net-pay') {
+      // Sacrifice lowers relevant UK earnings and net pay uses up the same relief limit, so existing
+      // relief-at-source contributions can lose relief as this method's contribution rises.
+      const base = calculateScenario(inputs, { label: 'base', method: null, additionalGross: 0 });
+      const atMax = calculateScenario(inputs, { label: 'max', method, additionalGross: maxFeasibleGross });
+      result.reason =
+        atMax.rasRelievedGross < base.rasRelievedGross
+          ? 'This method also uses up the relief limit for your existing relief-at-source contributions (relevant UK earnings, or £3,600 if higher), so they lose relief as this contribution rises and adjusted net income falls little or not at all.'
+          : 'Your employment pay is not large enough for this method alone to reach the target (other income still counts towards adjusted net income).';
+    } else {
+      result.reason =
+        'Tax-relievable personal contributions are limited to your relevant UK earnings (or £3,600 if higher), so this method alone cannot reach the target.';
+    }
     return result;
   }
 
