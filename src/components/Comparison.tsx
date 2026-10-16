@@ -36,7 +36,7 @@ const GROUPS: { title: string; rows: Row[] }[] = [
     title: 'Pension',
     rows: [
       { label: 'Pay given up or paid in by you', get: (s) => s.employeePensionCash },
-      { label: 'Your pension contribution (gross)', get: (s) => s.employeeFundedGross },
+      { label: 'Your DC pension contribution (gross)', get: (s) => s.employeeFundedGross },
       { label: 'Employer pension contribution', get: (s) => s.employerContribution },
       { label: 'Total pension investment', get: (s) => s.totalPensionInvestment },
     ],
