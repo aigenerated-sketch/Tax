@@ -13,18 +13,25 @@ export interface AnnualAllowanceInput {
   rasGross: Pence;
   /** Net income (after salary sacrifice and net-pay deductions, before RAS/Gift Aid). */
   netIncome: Pence;
-  /** Estimates the Income Tax due on a given excess (taxed as the top slice of income). */
+  /** Annual allowance charge on a given excess — see annualAllowanceChargeTax (PTM056110). */
   chargeFor: (excess: Pence) => Pence;
 }
 
 /**
- * Annual allowance test for the year (estimate).
+ * Annual allowance test for the year (estimate). Conventions: docs/CALCULATION_CONVENTIONS.md §6.
  *
- * - Threshold income ≈ net income − gross relief-at-source contributions + salary sacrificed for pension.
- * - Adjusted income ≈ net income + net-pay contributions + all employer contributions (incl. salary sacrifice) + DB pension input.
- * - Taper: if threshold income > £200k AND adjusted income > £260k, allowance falls £1 per £2, to a £10k minimum.
- * - MPAA: if triggered and DC inputs exceed £10k, the DC excess is charged and DB input is tested against the alternative allowance.
- * Gift Aid, lump-sum death benefits and DB employee-contribution adjustments are not modelled; results are labelled unverified.
+ * - Pension input (DC) = all relievable personal contributions (incl. any above the relief limit) +
+ *   employer contributions (FA 2004 s233, s188). DB input is the user's scheme-statement figure.
+ * - Threshold income = net income + salary sacrifice − RAS contributions entitled to relief (s228ZA(5)).
+ *   Gift Aid is not deducted.
+ * - Adjusted income = net income + DC net pay + salary sacrifice + employer contributions + DB input
+ *   (s228ZA(4)); DB member contributions are an input of their own and are not added back.
+ * - Taper: if threshold income > £200k AND adjusted income > £260k, the allowance falls £1 per complete £2,
+ *   to a £10k minimum.
+ * - MPAA: the alternative chargeable amount (s227B) is used only if it exceeds the default (s227ZA);
+ *   carry-forward only reaches DB savings (PTM055100).
+ * Lump-sum death benefits, contributions after age 75 and the DB input calculation itself are not
+ * modelled; results are labelled unverified where inputs are incomplete.
  */
 export function annualAllowanceCheck(input: AnnualAllowanceInput): AnnualAllowanceResult {
   const { rules, allowance, pension } = input;
@@ -40,8 +47,9 @@ export function annualAllowanceCheck(input: AnnualAllowanceInput): AnnualAllowan
   // FA 2004 s228ZA(5): net income + salary sacrifice for pension − RAS contributions entitled to relief.
   const thresholdIncome = nonNeg(input.netIncome - input.rasRelievedGross + pension.salarySacrifice);
   // FA 2004 s228ZA(4): net income + net-pay deductions + total pension input − contributions paid by the
-  // individual. For DC this is net income + net pay + employer contributions; for DB the member's own
-  // contributions are not separately known, so the whole DB input is added (overstates; flagged unverified).
+  // individual = net income + DC net pay + employer contributions (incl. sacrifice) + DB input. DB member
+  // contributions are deducted in net income, then added back and subtracted again, so they net to nil
+  // (they are passed separately and are not in pension.netPay).
   const adjustedIncome = nonNeg(input.netIncome + pension.netPay + employerTotal + pensionInputDb);
 
   const taperApplies = thresholdIncome > p.taperThresholdIncome && adjustedIncome > p.taperAdjustedIncome;

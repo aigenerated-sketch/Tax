@@ -65,10 +65,10 @@ export function extendBands(bands: TaxBand[], startIndex: number, extension: Pen
 /**
  * Income Tax for one individual for one tax year.
  *
- * Ordering: non-savings, then savings, then dividends. The personal allowance is set
- * against non-savings income first (applied exactly once). Non-savings income uses the
- * jurisdiction's bands; savings and dividends always use UK-wide bands and rates, with
- * non-savings income occupying the UK bands first.
+ * Ordering: non-savings, then savings, then dividends. The personal allowance is applied
+ * exactly once, allocated across components per `rules.allowanceAllocation` (ITA 2007 s25 —
+ * see calculateIncomeTax below). Non-savings income uses the jurisdiction's bands; savings and
+ * dividends always use UK-wide bands and rates, with non-savings income occupying the UK bands first.
  */
 export type IncomeComponent = 'non-savings' | 'savings' | 'dividends';
 

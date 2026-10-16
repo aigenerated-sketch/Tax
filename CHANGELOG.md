@@ -8,7 +8,7 @@
 - F4: Plan 5 in 2025/26 is a visible error. F5: partner ANI used for the HICBC without a childcare assessment.
 - F6: child disability defaults to "Not sure". F7: verification reported in four separate dimensions; wording tightened.
 - F8: personal allowance allocated by ITA s25(2) "greatest reduction" (no numeric change found for 2026/27).
-- Exact integer basis-point rounding; independent reference calculator, sweeps, optimiser validity and boundary tests (463 tests).
+- Exact integer basis-point rounding; independent reference calculator, sweeps, optimiser validity and boundary tests (463 tests at be4690a; 496 after the review follow-ups).
 - PSA for Scottish taxpayers and Gift Aid in the annual allowance taper confirmed from legislation.
 - F11: annual allowance charge stacked on reduced net income after the personal allowance at main rates; Scottish starter rate excluded (PTM056110/056120).
 - F12: explicit s227ZA comparison of default and alternative chargeable amounts (no numeric change). F13: separate input for DB member contributions (no double counting). F10b: infeasibility reason states actual figures.

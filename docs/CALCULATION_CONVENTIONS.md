@@ -23,7 +23,8 @@ loans. Net-pay contributions are **not** deducted (HMRC NIM02365: "NICs must be 
 the gross earnings before deduction of any pension contributions"). Relief-at-source
 contributions are paid from net pay and are not deducted either.
 
-1.2 **Employment income** `EI = E_NI − NP + BiK`.
+1.2 **Employment income** `EI = E_NI − NP − DBm + BiK`, where `DBm` is the member's own defined
+benefit contributions (net pay; kept separate from `NP` so they are not DC pension input — §6).
 
 1.3 **Non-savings income** `NSI = EI + P + O`.
 
@@ -49,15 +50,15 @@ Relief at source and Gift Aid both reduce ANI **and** extend the bands. These ar
 separate statutory mechanisms (ITA 2007 s.58 and the basic/higher rate limit extension), not
 double counting: the band extension does not reduce taxable income.
 
+1.6 **Taxable earnings for the relief limit** `TE = E_NI + BiK` (GOV.UK pension schemes rates:
+relief limited to the higher of 100% of UK taxable earnings and £3,600). Net-pay, DB member and
+RAS contributions together share this limit; RAS above it is treated as unrelieved: it does not
+reduce ANI, but it still counts as pension input (§6).
+
 1.7 **Other schemes.** `otherPersonalRasGross` (a second personal relief-at-source contribution,
 e.g. an existing SIPP) is added to `G_ras` and behaves exactly like any other RAS contribution.
 `otherEmployerContributions` (employer contributions to other schemes) is added to employer
 contributions: pension input and adjusted income only. Neither changes between baseline and proposal.
-
-1.6 **Taxable earnings for the relief limit** `TE = E_NI + BiK` (GOV.UK pension schemes rates:
-relief limited to the higher of 100% of UK taxable earnings and £3,600). Net-pay and RAS
-contributions together share this limit; RAS above it is treated as unrelieved and does not
-reduce ANI.
 
 ## 2. Personal allowance
 
@@ -165,4 +166,4 @@ answers given". The user's ANI is taken from the scenario; the partner's ANI is 
 
 ## Uncertainties carried by these conventions
 
-See `docs/RULES_VERIFICATION.md` (U1–U12).
+See `docs/RULES_VERIFICATION.md` (U1–U13).
