@@ -43,7 +43,7 @@ export function PrintReport({ out, inputs, notes, generatedAt }: { out: Calculat
     ['Income Tax', b.incomeTax.total, p.incomeTax.total],
     ['Employee NI', b.employeeNi.total, p.employeeNi.total],
     ['Student loan', b.studentLoan.total, p.studentLoan.total],
-    ['Your pension contributions (gross)', b.employeeFundedGross, p.employeeFundedGross],
+    ['Your DC pension contributions (gross)', b.employeeFundedGross, p.employeeFundedGross],
     ['Employer pension contributions', b.employerContribution, p.employerContribution],
     ['Total pension investment', b.totalPensionInvestment, p.totalPensionInvestment],
     ['Estimated take-home', b.takeHome, p.takeHome],
