@@ -1,0 +1,165 @@
+# UK £100k Tax Trap & Pension Relief Optimizer
+
+A static, privacy-first web calculator showing how pension contributions affect **adjusted net
+income (ANI)**, Income Tax, employee National Insurance, take-home pay, the pension annual
+allowance and childcare eligibility. Default tax year: **2026/27** (2025/26 also available).
+
+Everything runs in the browser. There is no backend, database, account, analytics or API key.
+
+> Educational estimates only — not financial or tax advice, not an HMRC calculation, and not
+> endorsed by HMRC or any pension provider.
+
+## Quick start
+
+```bash
+npm ci            # install exact versions from package-lock.json
+npm test          # run all unit + UI tests (Vitest + React Testing Library)
+npm run build     # typecheck, build to dist/, emit one HTML file per route
+npm run preview   # serve dist/ at http://localhost:4173
+npm run dev       # development server
+```
+
+Requires Node 20+ (tested on Node 22).
+
+## Pages
+
+| Route | Purpose |
+|---|---|
+| `/` | Calculator (fully usable on its own) |
+| `/how-it-works` | ANI, the £100k–£125,140 taper, marginal vs average rates |
+| `/salary-sacrifice-vs-sipp` | Comparison of contribution methods |
+| `/childcare-threshold` | Tax-Free Childcare and England funded hours rules |
+| `/methodology` | Rules in use (rendered from config), calculation order, rounding, sources, limitations, version history |
+| `/privacy`, `/disclaimer` | Policies |
+
+`scripts/prerender-routes.mjs` writes `dist/<route>/index.html` with per-route title, description
+and (when `SITE_URL` is set) canonical/Open Graph tags, `sitemap.xml` and `robots.txt`. No SPA
+rewrite rules are needed.
+
+## Project structure
+
+```
+src/
+  app/          App shell, routes (routes.json is shared with the prerender script), CalculatorPage
+  components/   Form fields, input panel, results, slider, comparison table, SVG chart, print report
+  content/      Educational pages
+  engine/       Pure calculation modules (no React)
+    ani.ts personalAllowance.ts incomeTax.ts nationalInsurance.ts pension.ts
+    annualAllowance.ts studentLoan.ts hicbc.ts childcare.ts scenario.ts
+    marginal.ts optimiser.ts compare.ts calculate.ts defaults.ts types.ts money.ts
+  lib/          Form parsing/validation, formatting, chart data, provider config (empty)
+  rules/        Versioned tax-year rules (integer pence) + official source register
+  styles/       Global CSS incl. dark mode and print styles
+  tests/        engine/, ui/, lib tests
+docs/           REFERENCE_CASES.md, TAX_YEAR_UPDATE.md
+scripts/        prerender-routes.mjs
+```
+
+## Supported calculations
+
+- Personal allowance taper (£1 per complete £2 of ANI over £100,000).
+- Income Tax for England, Wales, Northern Ireland and Scotland (non-savings bands per
+  jurisdiction); savings (starting rate band, personal savings allowance) and dividends
+  (allowance and rates) on UK-wide bands.
+- Employee Class 1 NI, category A, annualised; employer NI to estimate salary-sacrifice savings.
+- Pension methods, each with its own treatment: salary sacrifice, net pay, relief at source
+  (workplace), relief at source (SIPP/personal). Existing contributions as % (of basic salary,
+  salary + bonus, qualifying earnings or a custom figure) or fixed amounts, described as
+  employee-before-relief / net RAS / gross / sacrificed / unknown. Employer contributions,
+  optional employer match and optional employer NI pass-through.
+- Relief-at-source relief limit (higher of relevant UK earnings and £3,600 gross).
+- Higher-rate relief to be claimed from HMRC shown separately.
+- ANI optimiser (bisection to the penny on the full calculation) with feasibility limits.
+- Marginal Income Tax, marginal Income Tax + NI, with student loan, and average rates.
+- Annual allowance: standard, taper (threshold/adjusted income estimates), MPAA, verified
+  carry-forward, DB pension input supplied by user, estimated charge.
+- Student loans Plans 1/2/4/5 and postgraduate (payroll basis).
+- Gift Aid (gross-up, ANI deduction, band extension).
+- High Income Child Benefit Charge (falls on the higher-ANI partner when known).
+- Tax-Free Childcare (UK) and England working-parent funded hours: per-condition
+  assessment; unknown answers give “Eligibility not confirmed”.
+
+## Not supported (flagged in the UI where relevant)
+
+Self-employment and Class 2/4 NI; payroll per-period NI and tax codes; trading/property losses,
+property allowance and finance-cost credit; Marriage Allowance, Married Couple’s Allowance,
+Blind Person’s Allowance; non-residence and foreign income; DB pension input calculation;
+lump-sum death benefits in taper tests; NMW limits on salary sacrifice; student loan repayments
+via Self Assessment and multiple undergraduate plans; childcare schemes in Scotland, Wales and
+NI other than Tax-Free Childcare; NI categories other than A.
+
+## Key assumptions
+
+- Bonus is employment income subject to Class 1 NI. Taxable benefits attract Income Tax only.
+- Take-home = cash income − Income Tax (final, after claimed relief) − employee NI − student loan
+  − net-pay contributions − relief-at-source payments. Gift Aid donations, Child Benefit and
+  HICBC are shown separately, never mixed into take-home or “tax saved”.
+- Employer NI savings are **not** passed to the employee unless the user enters a share.
+- **Scotland:** relief-at-source and Gift Aid band extension applied to the Scottish basic band
+  and above (not starter), so relief is at the marginal Scottish rate and the 20% top-up is not
+  clawed back from starter-rate taxpayers. The personal savings allowance band for Scottish
+  taxpayers uses UK thresholds. Both are labelled estimates.
+- **Note on the build brief:** it described the Scottish intermediate band as “the next
+  £12,570”. GOV.UK publishes £16,957–£31,092 of taxable income for 2026/27 (a £14,136 band);
+  the published figure is used and tested.
+
+## Rounding
+
+Integer pence throughout. ANI truncated to whole pounds for the taper. Income Tax rounded to the
+penny per band (total = sum of bands). NI rounded per band; student loans and HICBC rounded down
+to the penny. Headline figures display whole pounds; tables display pence.
+
+## Source register
+
+All checked on 2026-10-16. The full list with links lives in `src/rules/sources.ts` and is
+rendered on `/methodology` and in the printed report.
+
+- Income Tax rates and allowances — gov.uk/government/publications/rates-and-allowances-income-tax
+- Rates and thresholds for employers 2026 to 2027 (Scottish bands, NI, student loans, NLW) — gov.uk/guidance/rates-and-thresholds-for-employers-2026-to-2027
+- Rates and thresholds for employers 2025 to 2026 — gov.uk/guidance/rates-and-thresholds-for-employers-2025-to-2026
+- Scottish Income Tax — gov.uk/scottish-income-tax/how-it-works
+- National Insurance rates — gov.uk/government/publications/rates-and-allowances-national-insurance-contributions
+- Pension schemes rates (AA £60k, taper £200k/£260k, minimum £10k, MPAA £10k) — gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
+- Automatic enrolment thresholds 2026/27 (£6,240–£50,270) — gov.uk review publication
+- Adjusted net income — gov.uk/guidance/adjusted-net-income
+- Tax-Free Childcare eligibility — gov.uk/tax-free-childcare/check-if-youre-eligible
+- Free childcare if working: eligibility (min. income £2,643.68 / 3 months aged 21+) — gov.uk/free-childcare-if-working/check-youre-eligible
+- High Income Child Benefit Charge — gov.uk/child-benefit-tax-charge
+- Gift Aid — gov.uk/donating-to-charity/gift-aid
+- Student loan repayment — gov.uk/repaying-your-student-loan
+
+## Testing
+
+`npm test` runs 212 tests: personal allowance taper points; every band boundary (below / at /
+above) for rUK and Scotland, plus 2025/26 Scottish limits; NI thresholds; savings/dividend
+ordering; all four methods at an equivalent £10,000 gross; existing and employer contributions;
+optimiser (already met, lower target, Gift Aid, infeasible); RAS relief limit; Scottish relief;
+marginal rates; student loans; HICBC; annual allowance (taper, minimum, MPAA, carry-forward);
+childcare (each condition and nation); reconciliation (take-home, taxable income, slices,
+before/after deltas) across profiles and methods; determinism; tax-year and jurisdiction
+switches; UI behaviour (results, slider/number sync, validation, jurisdiction switch, chart
+table, print, labels). Hand-worked reference cases: `docs/REFERENCE_CASES.md`.
+
+## Deployment
+
+The build output `dist/` is fully static.
+
+- **Netlify:** `netlify.toml` is included (build `npm run build`, publish `dist`).
+- **Cloudflare Pages:** build command `npm run build`, output `dist`. `public/_headers` is included.
+- **Vercel:** framework “Vite”, output `dist`.
+- **GitHub Pages:** run the “Deploy to GitHub Pages” workflow (manual). It sets
+  `BASE_PATH=/<repo>/` and `SITE_URL`.
+
+Set `SITE_URL` (e.g. `https://example.org`) at build time to emit canonical links and a sitemap;
+set `BASE_PATH` when serving from a sub-path.
+
+## Updating rules each year
+
+See `docs/TAX_YEAR_UPDATE.md`.
+
+## Affiliate / provider area
+
+`src/lib/providers.ts` defines a provider entry type (name, verified URL, fees + date checked,
+features, eligibility, affiliate disclosure, last verified). It ships **empty** — no provider
+details have been verified. The list is shown only after the results, in array order (never by
+commission). Get compliance review before adding financial promotions.

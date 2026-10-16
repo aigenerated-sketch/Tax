@@ -15,6 +15,9 @@ export interface CalculationOutput {
   marginalNow: MarginalRates;
   marginalAfter: MarginalRates;
   optimiser: OptimiserResult;
+  /** Scenario at the contribution needed to reach the target (null if already met). */
+  atTarget: ScenarioResult | null;
+  atTargetChange: ScenarioDelta | null;
   comparison: MethodComparisonRow[];
   childcareBefore: ChildcareAssessment;
   childcareAfter: ChildcareAssessment;
@@ -202,6 +205,11 @@ export function calculateAll(inputs: CalculatorInputs): CalculationOutput {
     method,
     additionalGross: inputs.additional.grossAmount,
   });
+  const optimiser = requiredContribution(inputs, method);
+  const atTarget =
+    optimiser.alreadyMet || optimiser.requiredGross === 0
+      ? null
+      : calculateScenario(inputs, { label: 'At target', method, additionalGross: optimiser.requiredGross });
   const childcareBefore = assessChildcare(inputs.childcare, baseline.adjustedNetIncome, rules);
   const childcareAfter = assessChildcare(inputs.childcare, proposed.adjustedNetIncome, rules);
   return {
@@ -211,7 +219,9 @@ export function calculateAll(inputs: CalculatorInputs): CalculationOutput {
     change: delta(baseline, proposed),
     marginalNow: marginalRates(inputs),
     marginalAfter: marginalRates(inputs, method, inputs.additional.grossAmount),
-    optimiser: requiredContribution(inputs, method),
+    optimiser,
+    atTarget,
+    atTargetChange: atTarget ? delta(baseline, atTarget) : null,
     comparison: compareMethods(inputs, inputs.additional.grossAmount),
     childcareBefore,
     childcareAfter,

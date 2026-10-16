@@ -1,4 +1,4 @@
-import { annualAllowanceCheck, calculateScenario, highIncomeChildBenefitCharge, marginalRates, studentLoanRepayment, emptyPension } from '../../engine';
+import { annualAllowanceCheck, calculateScenario, highIncomeChildBenefitCharge, marginalRates, studentLoanRepayment, emptyPension, type PensionAllowanceInputs } from '../../engine';
 import { R25, R26, inputs, p, salaryOnly } from '../helpers';
 
 describe('marginal rates come from the rules, not hard-coded', () => {
@@ -62,7 +62,7 @@ describe('High Income Child Benefit Charge', () => {
 });
 
 describe('annual allowance', () => {
-  const allowance = { definedBenefitMember: false, definedBenefitPensionInput: 0, otherPensionContributions: 0, mpaaTriggered: 'no' as const, carryForward: 0 };
+  const allowance: PensionAllowanceInputs = { definedBenefitMember: false, definedBenefitPensionInput: 0, otherPensionContributions: 0, mpaaTriggered: 'no', carryForward: 0 };
   const run = (netIncome: number, employer: number, extra: Partial<typeof allowance> = {}) =>
     annualAllowanceCheck({
       rules: R26,
