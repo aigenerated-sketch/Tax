@@ -9,6 +9,7 @@ export function baselineScenario(inputs: CalculatorInputs): ScenarioResult {
 export function delta(before: ScenarioResult, after: ScenarioResult): ScenarioDelta {
   return {
     takeHome: after.takeHome - before.takeHome,
+    employeePensionCash: after.employeePensionCash - before.employeePensionCash,
     incomeTax: after.incomeTax.total - before.incomeTax.total,
     employeeNi: after.employeeNi.total - before.employeeNi.total,
     studentLoan: after.studentLoan.total - before.studentLoan.total,

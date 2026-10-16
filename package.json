@@ -1,16 +1,17 @@
 {
   "name": "uk-100k-tax-trap-calculator",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "UK £100k Tax Trap & Pension Relief Optimizer — a static, privacy-first calculator.",
+  "description": "UK \u00a3100k Tax Trap & Pension Relief Optimizer \u2014 a static, privacy-first calculator.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/prerender-routes.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "docs:rules": "vite-node scripts/gen-rules-doc.ts"
   },
   "dependencies": {
     "react": "18.3.1",

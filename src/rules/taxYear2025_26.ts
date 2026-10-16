@@ -16,7 +16,8 @@ export const TAX_YEAR_2025_26: TaxYearRules = {
   dateVerified: '2026-10-16',
   notes: [
     'Plan 5 student loan repayments do not start until April 2026, so Plan 5 is not available for 2025/26.',
-    'Minimum-income amounts for 18–20 year olds (£2,080) and under-18s/apprentices (£1,570.40) are derived from the April 2025 National Minimum Wage rates (£10.00 and £7.55) × 16 hours × 13 weeks.',
+    'Minimum-income amounts for 18–20 year olds (£2,080) and under-18s/apprentices (£1,570.40) are derived from the April 2025 National Minimum Wage rates (£10.00 and £7.55, GOV.UK national-minimum-wage-rates) × 16 hours × 13 weeks.',
+    '2025/26 figures were checked against the GOV.UK 2025-26 employer rates page; the full 2026/27 verification register does not cover this year.',
   ],
 
   personalAllowance: {

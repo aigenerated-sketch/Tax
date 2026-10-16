@@ -3,6 +3,26 @@ import type { CalculationOutput } from '../engine/calculate';
 import { METHOD_LABELS } from '../engine/pension';
 import { formatGBP } from '../lib/format';
 import { parseMoney } from '../lib/form';
+import { jurisdictionName } from '../lib/jurisdiction';
+import type { ReactNode } from 'react';
+
+function ResultGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="result-group">
+      <h3>{title}</h3>
+      <dl className="result-list">{children}</dl>
+    </div>
+  );
+}
+
+function Row({ label, value, testId, strong }: { label: string; value: string; testId?: string; strong?: boolean }) {
+  return (
+    <div className={strong ? 'strong' : undefined}>
+      <dt>{label}</dt>
+      <dd data-testid={testId}>{value}</dd>
+    </div>
+  );
+}
 
 const STEP_POUNDS = 100;
 
@@ -38,6 +58,7 @@ export function ContributionSlider({ out, value, onChange }: { out: CalculationO
   const reached = proposed.adjustedNetIncome <= optimiser.target;
   const aa = proposed.annualAllowance;
   const isSS = proposed.method === 'salary-sacrifice';
+  const jurisdictionLabel = jurisdictionName(out.jurisdiction);
 
   return (
     <section className="card slider-card" aria-labelledby={`${id}-title`}>
@@ -84,66 +105,45 @@ export function ContributionSlider({ out, value, onChange }: { out: CalculationO
             ? `Adjusted net income is at or below your ${formatGBP(optimiser.target, { decimals: 0 })} target.`
             : `Adjusted net income is still ${formatGBP(proposed.adjustedNetIncome - optimiser.target, { decimals: 0 })} above your target.`}
         </p>
-        <dl className="result-list">
-          <div>
-            <dt>Gross pension contribution</dt>
-            <dd data-testid="slider-gross">{formatGBP(proposed.additionalGross)}</dd>
-          </div>
-          <div>
-            <dt>Change in take-home pay (your cash-flow impact)</dt>
-            <dd data-testid="slider-takehome">{formatGBP(change.takeHome, { signed: true })}</dd>
-          </div>
-          {proposed.rasCashPaid - baseline.rasCashPaid > 0 && (
-            <div>
-              <dt>Paid by you into the pension (before reclaiming higher-rate relief)</dt>
-              <dd>{formatGBP(proposed.rasCashPaid - baseline.rasCashPaid)}</dd>
-            </div>
-          )}
-          <div>
-            <dt>Revised adjusted net income</dt>
-            <dd data-testid="slider-ani">{formatGBP(proposed.adjustedNetIncome)}</dd>
-          </div>
-          <div>
-            <dt>Income Tax saved</dt>
-            <dd>{formatGBP(-change.incomeTax)}</dd>
-          </div>
-          <div>
-            <dt>Employee NI saved</dt>
-            <dd>{formatGBP(-change.employeeNi)}</dd>
-          </div>
-          {change.studentLoan !== 0 && (
-            <div>
-              <dt>Student loan repayments reduced by</dt>
-              <dd>{formatGBP(-change.studentLoan)}</dd>
-            </div>
-          )}
+        <ResultGroup title="Pension">
+          <Row label="Gross pension contribution (this change)" testId="slider-gross" value={formatGBP(proposed.additionalGross)} />
+          <Row label="Pay given up or paid in by you (this change)" value={formatGBP(change.employeePensionCash)} />
+          <Row label="Employer pension contributions (total)" value={formatGBP(proposed.employerContribution)} />
+          <Row label="Total pension investment this year" value={formatGBP(proposed.totalPensionInvestment)} />
+        </ResultGroup>
+        <ResultGroup title={`Income Tax — ${jurisdictionLabel} rules`}>
+          <Row label="Revised adjusted net income" testId="slider-ani" value={formatGBP(proposed.adjustedNetIncome)} />
+          <Row label="Personal allowance" value={formatGBP(proposed.incomeTax.personalAllowance)} />
+          <Row label="Income Tax saved" testId="slider-it-saved" value={formatGBP(-change.incomeTax)} />
           {proposed.reliefToClaim - baseline.reliefToClaim > 0 && (
-            <div>
-              <dt>Of the tax saved, to claim from HMRC</dt>
-              <dd>{formatGBP(proposed.reliefToClaim - baseline.reliefToClaim)}</dd>
-            </div>
+            <Row label="…of which you must claim from HMRC" value={formatGBP(proposed.reliefToClaim - baseline.reliefToClaim)} />
           )}
-          <div>
-            <dt>Employer pension contributions</dt>
-            <dd>{formatGBP(proposed.employerContribution)}</dd>
-          </div>
-          {isSS && change.employerNi < 0 && (
-            <div>
-              <dt>Employer NI saving (kept by employer unless shared)</dt>
-              <dd>{formatGBP(-change.employerNi)}</dd>
-            </div>
-          )}
-          <div>
-            <dt>Total pension investment this year</dt>
-            <dd>{formatGBP(proposed.totalPensionInvestment)}</dd>
-          </div>
-          {change.hicbc !== 0 && (
-            <div>
-              <dt>Change in High Income Child Benefit Charge</dt>
-              <dd>{formatGBP(change.hicbc, { signed: true })}</dd>
-            </div>
-          )}
-        </dl>
+        </ResultGroup>
+        <ResultGroup title="National Insurance (UK-wide)">
+          <Row label="Employee NI saved" testId="slider-ni-saved" value={formatGBP(-change.employeeNi)} />
+          {isSS && change.employerNi < 0 && <Row label="Employer NI saving (kept by employer unless shared)" value={formatGBP(-change.employerNi)} />}
+          {!isSS && proposed.additionalGross > 0 && <p className="hint">This method does not reduce National Insurance.</p>}
+        </ResultGroup>
+        {change.studentLoan !== 0 && (
+          <ResultGroup title="Student loan">
+            <Row label="Repayments reduced by" value={formatGBP(-change.studentLoan)} />
+          </ResultGroup>
+        )}
+        <ResultGroup title="Take-home pay">
+          <Row label="Change in take-home pay (your cash-flow impact)" testId="slider-takehome" value={formatGBP(change.takeHome, { signed: true })} strong />
+          <p className="hint reconcile" data-testid="slider-reconcile">
+            = −{formatGBP(change.employeePensionCash)} into pension + {formatGBP(-change.incomeTax)} Income Tax + {formatGBP(-change.employeeNi)} NI
+            {change.studentLoan !== 0 && <> + {formatGBP(-change.studentLoan)} student loan</>}
+          </p>
+        </ResultGroup>
+        {change.hicbc !== 0 && (
+          <ResultGroup title="Child Benefit (separate from take-home)">
+            <Row label="Change in High Income Child Benefit Charge" value={formatGBP(change.hicbc, { signed: true })} />
+          </ResultGroup>
+        )}
+        {out.childcareBefore.assessed && (
+          <p className="hint">Childcare eligibility is a separate household benefit — see “Childcare eligibility” below. It is not included in any figure above.</p>
+        )}
         {aa.excess > 0 && (
           <p className="warning sev-warning" role="status">
             Annual allowance: inputs of {formatGBP(aa.pensionInputTotal, { decimals: 0 })} exceed {formatGBP(aa.totalAvailable, { decimals: 0 })} available on your

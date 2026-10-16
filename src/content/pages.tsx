@@ -1,7 +1,14 @@
 import type { ReactNode } from 'react';
 import { href } from '../app/routes';
 import { formatGBP, formatPercent } from '../lib/format';
-import { SOURCES, SUPPORTED_TAX_YEARS, TAX_YEARS, type IncomeTaxBandSet } from '../rules';
+import { SOURCES, SUPPORTED_TAX_YEARS, TAX_YEARS, UNCERTAINTIES_2026_27, VERIFICATION_2026_27, type IncomeTaxBandSet, type VerificationLevel } from '../rules';
+
+const LEVEL_LABEL: Record<VerificationLevel, string> = {
+  official: 'Official',
+  'official-inferred': 'Official (inferred)',
+  secondary: 'Secondary',
+  convention: 'Convention',
+};
 
 const Ext = ({ to, children }: { to: string; children: ReactNode }) => (
   <a href={to} rel="noopener noreferrer" target="_blank">
@@ -279,6 +286,61 @@ export function Methodology() {
         Marginal rates come from recalculating everything with £100 more employment earnings. The contribution needed to reach a target ANI is found by bisection to the
         penny on the full calculation, within the limits of each method (pay available for sacrifice or net-pay; relevant UK earnings for relief at source).
       </p>
+      <h2>Rule-by-rule verification ({r.label})</h2>
+      <p>
+        Every rate, threshold and rule used, its value (read from the live configuration) and the official source checked on {r.dateVerified}.{' '}
+        <strong>Official</strong> = stated on the cited page; <strong>official (inferred)</strong> = follows directly from official statements;{' '}
+        <strong>secondary</strong> = non-government source only; <strong>convention</strong> = a modelling choice.
+      </p>
+      <div className="table-scroll" tabIndex={0} role="region" aria-label="Verification register">
+        <table className="compare register">
+          <thead>
+            <tr>
+              <th scope="col">Area</th>
+              <th scope="col">Rule</th>
+              <th scope="col">Value</th>
+              <th scope="col">Status</th>
+              <th scope="col">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {VERIFICATION_2026_27.map((v) => (
+              <tr key={`${v.area}-${v.rule}`}>
+                <td>{v.area}</td>
+                <th scope="row">
+                  {v.rule}
+                  {v.note && <span className="row-note">{v.note}</span>}
+                </th>
+                <td>{v.value}</td>
+                <td>{LEVEL_LABEL[v.level]}</td>
+                <td>
+                  {v.sources.length === 0
+                    ? '—'
+                    : v.sources.map((u, i) => (
+                        <span key={u}>
+                          {i > 0 && ', '}
+                          <Ext to={u}>[{i + 1}]</Ext>
+                        </span>
+                      ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h2>Open uncertainties and assumptions</h2>
+      <dl className="uncertainties">
+        {UNCERTAINTIES_2026_27.map((u) => (
+          <div key={u.id}>
+            <dt>
+              {u.id}. {u.title}
+            </dt>
+            <dd>
+              {u.detail} <em>Handling:</em> {u.handling}
+            </dd>
+          </div>
+        ))}
+      </dl>
       <h2>Known limitations (not modelled)</h2>
       <ul>
         <li>Per-period payroll NI and tax codes; emergency codes; in-year changes; bonus timing.</li>
@@ -301,6 +363,7 @@ export function Methodology() {
       </ul>
       <h2>Version history</h2>
       <ul>
+        <li>1.1.0 (16 October 2026) — full 2026/27 rule-by-rule verification against GOV.UK and Scottish Government sources; single definition of net income; engine-level input and rule validation; Gift Aid 4× warning; results grouped by Income Tax, NI, pension and take-home with a reconciliation line.</li>
         <li>1.0.0 (16 October 2026) — first release: {r.label} and 2025/26 rules, England/Wales/NI and Scotland, four contribution methods, childcare, annual allowance, student loans, Child Benefit charge.</li>
       </ul>
     </Article>

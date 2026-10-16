@@ -7,6 +7,7 @@ import { EmployerDiscussion, PrintReport } from '../components/PrintReport';
 import { ChildcareResults, KeyResults, Warnings } from '../components/Results';
 import { calculateAll, type CalculationOutput } from '../engine/calculate';
 import { defaultFormState, EXAMPLES, parseForm, type FormState } from '../lib/form';
+import { jurisdictionBasis, jurisdictionName } from '../lib/jurisdiction';
 import { TAX_YEARS } from '../rules';
 
 export function CalculatorPage({ initial }: { initial?: FormState }) {
@@ -89,6 +90,12 @@ export function CalculatorPage({ initial }: { initial?: FormState }) {
           )}
           {result.out && inputs && (
             <>
+              <section className="card basis-banner" aria-label="Calculation basis" data-testid="basis-banner">
+                <p className="basis-title">
+                  Calculating for: <strong>{jurisdictionName(result.out.jurisdiction)}</strong> · Tax year <strong>{result.out.rules.label}</strong>
+                </p>
+                <p className="hint">{jurisdictionBasis(result.out.jurisdiction)}</p>
+              </section>
               <KeyResults out={result.out} />
               <ContributionSlider out={result.out} value={form.additionalGross} onChange={(v) => set('additionalGross', v)} />
               <MethodComparison out={result.out} />

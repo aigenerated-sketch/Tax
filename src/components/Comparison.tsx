@@ -6,29 +6,55 @@ import { formatGBP } from '../lib/format';
 
 type Row = { label: string; get: (s: ScenarioResult, d: ScenarioDelta) => number; signed?: boolean; note?: string };
 
-const ROWS: Row[] = [
-  { label: 'Gross pay & income (after sacrifice)', get: (s) => s.grossCashIncome },
-  { label: 'Adjusted net income', get: (s) => s.adjustedNetIncome },
-  { label: 'Taxable income', get: (s) => s.incomeTax.totalTaxableIncome },
-  { label: 'Income Tax', get: (s) => s.incomeTax.total },
-  { label: '…of which reclaimed from HMRC', get: (s) => s.reliefToClaim, note: 'Relief above basic rate on relief-at-source and Gift Aid' },
-  { label: 'Employee NI', get: (s) => s.employeeNi.total },
-  { label: 'Student loan', get: (s) => s.studentLoan.total },
-  { label: 'Your pension contribution (gross)', get: (s) => s.employeeFundedGross },
-  { label: 'Employer pension contribution', get: (s) => s.employerContribution },
-  { label: 'Total pension investment', get: (s) => s.totalPensionInvestment },
-  { label: 'Estimated take-home', get: (s) => s.takeHome },
-  { label: 'Change in take-home', get: (_s, d) => d.takeHome, signed: true },
-  { label: 'Income Tax saved', get: (_s, d) => -d.incomeTax },
-  { label: 'Employee NI saved', get: (_s, d) => -d.employeeNi },
-  { label: 'Employer NI saving (not yours unless shared)', get: (_s, d) => -d.employerNi },
+const GROUPS: { title: string; rows: Row[] }[] = [
+  {
+    title: 'Income',
+    rows: [
+      { label: 'Gross pay & income (after sacrifice)', get: (s) => s.grossCashIncome },
+      { label: 'Adjusted net income', get: (s) => s.adjustedNetIncome },
+    ],
+  },
+  {
+    title: 'Income Tax',
+    rows: [
+      { label: 'Taxable income', get: (s) => s.incomeTax.totalTaxableIncome },
+      { label: 'Income Tax', get: (s) => s.incomeTax.total },
+      { label: '…of which reclaimed from HMRC', get: (s) => s.reliefToClaim, note: 'Relief above basic rate on relief-at-source and Gift Aid' },
+      { label: 'Income Tax saved', get: (_s, d) => -d.incomeTax },
+    ],
+  },
+  {
+    title: 'National Insurance',
+    rows: [
+      { label: 'Employee NI', get: (s) => s.employeeNi.total },
+      { label: 'Employee NI saved', get: (_s, d) => -d.employeeNi },
+      { label: 'Employer NI saving (not yours unless shared)', get: (_s, d) => -d.employerNi },
+    ],
+  },
+  { title: 'Student loan', rows: [{ label: 'Student loan', get: (s) => s.studentLoan.total }] },
+  {
+    title: 'Pension',
+    rows: [
+      { label: 'Pay given up or paid in by you', get: (s) => s.employeePensionCash },
+      { label: 'Your pension contribution (gross)', get: (s) => s.employeeFundedGross },
+      { label: 'Employer pension contribution', get: (s) => s.employerContribution },
+      { label: 'Total pension investment', get: (s) => s.totalPensionInvestment },
+    ],
+  },
+  {
+    title: 'Take-home pay',
+    rows: [
+      { label: 'Estimated take-home', get: (s) => s.takeHome },
+      { label: 'Change in take-home', get: (_s, d) => d.takeHome, signed: true },
+    ],
+  },
 ];
 
 export function MethodComparison({ out }: { out: CalculationOutput }) {
   const id = useId();
   const { comparison, baseline, proposed } = out;
   const gross = proposed.additionalGross;
-  const zero: ScenarioDelta = { takeHome: 0, incomeTax: 0, employeeNi: 0, studentLoan: 0, employerNi: 0, adjustedNetIncome: 0, totalPensionInvestment: 0, hicbc: 0 };
+  const zero: ScenarioDelta = { takeHome: 0, employeePensionCash: 0, incomeTax: 0, employeeNi: 0, studentLoan: 0, employerNi: 0, adjustedNetIncome: 0, totalPensionInvestment: 0, hicbc: 0 };
   return (
     <section className="card" aria-labelledby={`${id}-t`}>
       <h2 id={`${id}-t`}>Compare contribution methods</h2>
@@ -51,8 +77,14 @@ export function MethodComparison({ out }: { out: CalculationOutput }) {
               ))}
             </tr>
           </thead>
-          <tbody>
-            {ROWS.map((r) => (
+          {GROUPS.map((g) => (
+          <tbody key={g.title}>
+            <tr className="group-row">
+              <th scope="colgroup" colSpan={2 + comparison.length}>
+                {g.title}
+              </th>
+            </tr>
+            {g.rows.map((r) => (
               <tr key={r.label}>
                 <th scope="row">
                   {r.label}
@@ -67,6 +99,7 @@ export function MethodComparison({ out }: { out: CalculationOutput }) {
               </tr>
             ))}
           </tbody>
+          ))}
         </table>
       </div>
       <p className="hint">

@@ -200,3 +200,22 @@ describe('Scottish relief-at-source modelling', () => {
     expect(b.incomeTax.total - s.incomeTax.total + (b.employeeNi.total - s.employeeNi.total)).toBe(p(6_950));
   });
 });
+
+describe('Scotland £110,000, £10,000 gross: Income Tax vs NI vs take-home (docs/REFERENCE_CASES.md)', () => {
+  const i = salaryOnly(110_000, { jurisdiction: 'scotland' });
+  const b = base(i);
+  it('salary sacrifice: tax £30,732.05 (saves £6,750), NI saves £200, take-home −£3,050', () => {
+    const s = withM('salary-sacrifice', 10_000, i);
+    expect(s.incomeTax.total).toBe(p(30_732.05));
+    expect(b.incomeTax.total - s.incomeTax.total).toBe(p(6_750));
+    expect(b.employeeNi.total - s.employeeNi.total).toBe(p(200));
+    expect(s.takeHome - b.takeHome).toBe(p(-3_050));
+  });
+  it('SIPP: tax £32,732.05, claim £4,750, NI unchanged, take-home −£3,250', () => {
+    const s = withM('ras-sipp', 10_000, i);
+    expect(s.incomeTax.total).toBe(p(32_732.05));
+    expect(s.reliefToClaim).toBe(p(4_750));
+    expect(s.employeeNi.total).toBe(b.employeeNi.total);
+    expect(s.takeHome - b.takeHome).toBe(p(-3_250));
+  });
+});

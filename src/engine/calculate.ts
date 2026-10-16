@@ -9,6 +9,8 @@ import type { CalcWarning, CalculatorInputs, MarginalRates, OptimiserResult, Sce
 
 export interface CalculationOutput {
   rules: TaxYearRules;
+  /** The Income Tax jurisdiction these results were calculated for. */
+  jurisdiction: CalculatorInputs['jurisdiction'];
   baseline: ScenarioResult;
   proposed: ScenarioResult;
   change: ScenarioDelta;
@@ -214,6 +216,7 @@ export function calculateAll(inputs: CalculatorInputs): CalculationOutput {
   const childcareAfter = assessChildcare(inputs.childcare, proposed.adjustedNetIncome, rules);
   return {
     rules,
+    jurisdiction: inputs.jurisdiction,
     baseline,
     proposed,
     change: delta(baseline, proposed),

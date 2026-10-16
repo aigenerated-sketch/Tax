@@ -5,6 +5,7 @@ import { STATUS_LABELS } from '../engine/childcare';
 import type { CalculatorInputs } from '../engine/types';
 import { formatDate, formatGBP, formatPercent } from '../lib/format';
 import { JURISDICTIONS } from './InputPanel';
+import { jurisdictionBasis } from '../lib/jurisdiction';
 
 export const EMPLOYER_PROMPTS = [
   'Is salary sacrifice available for pension contributions?',
@@ -53,6 +54,7 @@ export function PrintReport({ out, inputs, notes, generatedAt }: { out: Calculat
       <p>
         Generated {formatDate(generatedAt)} · Tax year {rules.label} · {jurisdiction} rules · Rules verified {rules.dateVerified}
       </p>
+      <p>{jurisdictionBasis(inputs.jurisdiction)}</p>
       <p className="print-disclaimer">
         Educational estimate only. This is not an HMRC calculation, a payroll instruction or financial advice. Figures are annual estimates based on the inputs below.
       </p>
@@ -80,7 +82,9 @@ export function PrintReport({ out, inputs, notes, generatedAt }: { out: Calculat
         <li>Proposed gross contribution: {formatGBP(p.additionalGross)}</li>
         <li>Current adjusted net income: {formatGBP(b.adjustedNetIncome)} → {formatGBP(p.adjustedNetIncome)}</li>
         <li>Estimated change in take-home pay: {formatGBP(change.takeHome, { signed: true })} a year</li>
-        <li>Income Tax saved: {formatGBP(-change.incomeTax)} · Employee NI saved: {formatGBP(-change.employeeNi)}</li>
+        <li>Income Tax saved: {formatGBP(-change.incomeTax)}</li>
+        <li>Employee National Insurance saved: {formatGBP(-change.employeeNi)}</li>
+        <li>Pay given up or paid into pension by you: {formatGBP(change.employeePensionCash)}</li>
         {p.reliefToClaim > 0 && <li>Relief to claim from HMRC (Self Assessment or tax code): {formatGBP(p.reliefToClaim)}</li>}
         <li>
           Marginal rates now: Income Tax {formatPercent(out.marginalNow.incomeTax)}, with employee NI {formatPercent(out.marginalNow.combined)}

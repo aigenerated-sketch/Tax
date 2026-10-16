@@ -3,6 +3,7 @@ import { METHOD_LABELS } from '../engine/pension';
 import { STATUS_LABELS, type EligibilityStatus, type SchemeAssessment } from '../engine/childcare';
 import type { CalcWarning } from '../engine/types';
 import { formatGBP, formatPercent } from '../lib/format';
+import { jurisdictionName } from '../lib/jurisdiction';
 
 export function KeyResults({ out }: { out: CalculationOutput }) {
   const { baseline, marginalNow, optimiser, atTargetChange, childcareBefore } = out;
@@ -12,7 +13,9 @@ export function KeyResults({ out }: { out: CalculationOutput }) {
     : null;
   return (
     <section className="card key-results" aria-labelledby="key-title">
-      <h2 id="key-title">Key results</h2>
+      <h2 id="key-title">
+        Key results <span className="title-tag">{jurisdictionName(out.jurisdiction)} · {out.rules.label}</span>
+      </h2>
       <dl className="stat-grid">
         <div className="stat">
           <dt>Current adjusted net income</dt>
@@ -22,14 +25,14 @@ export function KeyResults({ out }: { out: CalculationOutput }) {
           <dd className="stat-note">Personal allowance: {formatGBP(baseline.incomeTax.personalAllowance, { decimals: 0 })}</dd>
         </div>
         <div className="stat">
-          <dt>Marginal Income Tax rate</dt>
+          <dt>Marginal Income Tax rate ({out.jurisdiction === 'scotland' ? 'Scottish' : 'UK'} rates)</dt>
           <dd className="stat-value" data-testid="marginal-it">
             {formatPercent(marginalNow.incomeTax)}
           </dd>
           <dd className="stat-note">On the next £100 of earnings</dd>
         </div>
         <div className="stat">
-          <dt>Marginal Income Tax + employee NI</dt>
+          <dt>Marginal Income Tax + employee National Insurance</dt>
           <dd className="stat-value" data-testid="marginal-combined">
             {formatPercent(marginalNow.combined)}
           </dd>

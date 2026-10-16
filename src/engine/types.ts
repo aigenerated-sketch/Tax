@@ -233,8 +233,12 @@ export interface ScenarioResult {
   contractualPay: Pence;
   /** Cash employment pay after salary sacrifice (before tax, NI and other deductions). */
   cashPayAfterSacrifice: Pence;
-  /** Total income for tax purposes (net income before relief-at-source and Gift Aid deductions). */
+  /** Employment income: Class 1 earnings − net-pay contributions + taxable benefits (conventions §1.2). */
+  employmentIncome: Pence;
+  /** Net income (conventions §1.4): before PA, after salary sacrifice and net pay, before RAS and Gift Aid deductions. */
   totalIncome: Pence;
+  /** Gift Aid donations grossed up at the basic rate. */
+  giftAidGross: Pence;
   adjustedNetIncome: Pence;
   /** Income Tax as finally due for the year, after all relief modelled here (incl. any reclaim). */
   incomeTax: IncomeTaxResult;
@@ -250,6 +254,8 @@ export interface ScenarioResult {
   rasRelievedGross: Pence;
   /** Cash paid by the employee into relief-at-source pensions (net of the basic-rate top-up). */
   rasCashPaid: Pence;
+  /** Pay given up or cash paid into pensions by the employee: sacrifice + net pay + RAS cash (conventions §5). */
+  employeePensionCash: Pence;
   /** Gross pension contribution funded by the employee (sacrifice + net pay + RAS gross). */
   employeeFundedGross: Pence;
   /** Employer contributions excluding salary sacrifice. */
@@ -279,6 +285,8 @@ export interface MarginalRates {
 
 export interface ScenarioDelta {
   takeHome: Pence;
+  /** Change in pay given up / cash paid into pensions by the employee. */
+  employeePensionCash: Pence;
   incomeTax: Pence;
   employeeNi: Pence;
   studentLoan: Pence;

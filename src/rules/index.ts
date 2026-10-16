@@ -17,3 +17,4 @@ export const SUPPORTED_TAX_YEARS: TaxYearId[] = ['2026-27', '2025-26'];
 export function getRules(id: string): TaxYearRules | undefined {
   return (TAX_YEARS as Record<string, TaxYearRules | undefined>)[id];
 }
+export * from './verification';

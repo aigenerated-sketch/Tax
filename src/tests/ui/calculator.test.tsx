@@ -117,4 +117,35 @@ describe('calculator UI', () => {
       expect(labelled, `control ${el.outerHTML.slice(0, 80)}`).toBeTruthy();
     });
   });
+
+  it('states which jurisdiction and tax year it is calculating for, and updates on change', async () => {
+    const user = userEvent.setup();
+    setup({ salary: '110000' });
+    const banner = screen.getByTestId('basis-banner');
+    expect(banner).toHaveTextContent('Calculating for: England · Tax year 2026/27');
+    expect(banner).toHaveTextContent(/UK \(England, Wales and Northern Ireland\) Income Tax rates/);
+    await user.selectOptions(screen.getByLabelText(/Income Tax jurisdiction/), 'scotland');
+    expect(screen.getByTestId('basis-banner')).toHaveTextContent('Calculating for: Scotland');
+    expect(screen.getByTestId('basis-banner')).toHaveTextContent(/Scottish Income Tax rates and bands apply to earnings/);
+    await user.selectOptions(screen.getByLabelText(/^Tax year$/), '2025-26');
+    expect(screen.getByTestId('basis-banner')).toHaveTextContent('Tax year 2025/26');
+  });
+
+  it('shows Income Tax, NI, pension and take-home separately, and they reconcile', () => {
+    setup({ salary: '110000', additionalGross: '10000' });
+    expect(screen.getByTestId('slider-it-saved')).toHaveTextContent('£6,000.00');
+    expect(screen.getByTestId('slider-ni-saved')).toHaveTextContent('£200.00');
+    expect(screen.getByTestId('slider-takehome')).toHaveTextContent('−£3,800.00');
+    expect(screen.getByTestId('slider-reconcile')).toHaveTextContent('= −£10,000.00 into pension + £6,000.00 Income Tax + £200.00 NI');
+    for (const h of ['Pension', 'Income Tax — England rules', 'National Insurance (UK-wide)', 'Take-home pay']) {
+      expect(screen.getByRole('heading', { name: h })).toBeInTheDocument();
+    }
+  });
+
+  it('net pay: NI saving is zero and labelled as such', () => {
+    setup({ salary: '110000', additionalGross: '10000', additionalMethod: 'net-pay' });
+    expect(screen.getByTestId('slider-ni-saved')).toHaveTextContent('£0.00');
+    expect(screen.getByText('This method does not reduce National Insurance.')).toBeInTheDocument();
+    expect(screen.getByTestId('slider-takehome')).toHaveTextContent('−£4,000.00');
+  });
 });

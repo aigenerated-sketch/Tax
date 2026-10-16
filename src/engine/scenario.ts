@@ -1,6 +1,6 @@
 import { getRules } from '../rules';
 import type { TaxYearRules } from '../rules/types';
-import { adjustedNetIncome, grossUpAtBasicRate } from './ani';
+import { adjustedNetIncome, computeIncomeComponents, grossUpAtBasicRate } from './ani';
 import { annualAllowanceCheck } from './annualAllowance';
 import { highIncomeChildBenefitCharge } from './hicbc';
 import { calculateIncomeTax } from './incomeTax';
@@ -9,6 +9,7 @@ import { employeeNi, employerNi } from './nationalInsurance';
 import { employerMatch, isReliefAtSource, resolveExistingPension, withAdditional } from './pension';
 import { studentLoanRepayment } from './studentLoan';
 import type { CalcWarning, CalculatorInputs, Pence, PensionMethod, ScenarioResult } from './types';
+import { InvalidInputsError, InvalidRulesError, validateInputs, validateRules } from './validate';
 
 export class RulesUnavailableError extends Error {
   constructor(id: string) {
@@ -17,9 +18,17 @@ export class RulesUnavailableError extends Error {
   }
 }
 
+const validatedRules = new WeakSet<TaxYearRules>();
+
+/** Look up and validate the rules for the inputs' tax year. Throws rather than calculate on bad rules. */
 export function rulesFor(inputs: CalculatorInputs): TaxYearRules {
   const rules = getRules(inputs.taxYear);
   if (!rules) throw new RulesUnavailableError(inputs.taxYear);
+  if (!validatedRules.has(rules)) {
+    const problems = validateRules(rules);
+    if (problems.length > 0) throw new InvalidRulesError(problems);
+    validatedRules.add(rules);
+  }
   return rules;
 }
 
@@ -35,25 +44,29 @@ export interface ScenarioOptions {
 /**
  * Calculate one complete scenario (a person's year) from the inputs plus an optional
  * additional pension contribution. Pure: the same inputs always give the same output.
+ * Conventions: docs/CALCULATION_CONVENTIONS.md.
  */
 export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOptions): ScenarioResult {
   const rules = rulesFor(inputs);
+  const problems = validateInputs(inputs);
+  if (!Number.isInteger(opts.additionalGross) || opts.additionalGross < 0) problems.push('additional gross contribution must be a non-negative whole number of pence');
+  if (problems.length > 0) throw new InvalidInputsError(problems);
+
   const warnings: CalcWarning[] = [];
   const inc = inputs.income;
   const probe = nonNeg(opts.incomeProbe ?? 0);
 
-  // 1. Pension arrangements (existing figures are resolved against the original income, so a probe never changes them).
+  // Pension arrangements. Existing figures are resolved against the original income so a probe never changes them.
   const existing = resolveExistingPension(inputs.existingPension, inc, rules);
   warnings.push(...existing.warnings);
-  const additionalGross = opts.method ? nonNeg(opts.additionalGross) : 0;
+  const additionalGross = opts.method ? opts.additionalGross : 0;
   let pension = opts.method ? withAdditional(existing.pension, opts.method, additionalGross) : { ...existing.pension };
-
   if (opts.method && additionalGross > 0) {
     const match = employerMatch({ ...inputs.additional, method: opts.method, grossAmount: additionalGross });
     pension = { ...pension, employerOther: pension.employerOther + match };
   }
 
-  // 2. Employment pay.
+  // Cap sacrifice and net pay to the pay available (unsupported relief claims are flagged, not used).
   const contractualPay = inc.salary + inc.bonus + probe;
   if (pension.salarySacrifice > contractualPay) {
     warnings.push({
@@ -64,36 +77,29 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
     });
     pension = { ...pension, salarySacrifice: contractualPay };
   }
-  const cashPay = contractualPay - pension.salarySacrifice;
-
-  // Employer NI and any share of the salary-sacrifice saving passed to the pension.
-  const employerNiNow = employerNi(cashPay, rules);
-  if (opts.method === 'salary-sacrifice' && additionalGross > 0 && inputs.additional.employerNiPassThroughPercent > 0) {
-    const before = employerNi(cashPay + Math.min(additionalGross, pension.salarySacrifice), rules);
-    const passThrough = roundPence(
-      ((before - employerNiNow) * Math.min(100, Math.max(0, inputs.additional.employerNiPassThroughPercent))) / 100,
-    );
-    pension = { ...pension, employerOther: pension.employerOther + passThrough };
-  }
-
-  if (pension.netPay > cashPay) {
+  if (pension.netPay > contractualPay - pension.salarySacrifice) {
     warnings.push({
       id: 'netpay-exceeds-pay',
       severity: 'error',
       category: 'pension',
       message: 'Net-pay contributions cannot exceed your pay. They have been limited to your pay after any salary sacrifice.',
     });
-    pension = { ...pension, netPay: cashPay };
+    pension = { ...pension, netPay: contractualPay - pension.salarySacrifice };
   }
 
-  // 3. Income for tax.
-  const employmentIncome = cashPay - pension.netPay + inc.taxableBenefits;
-  const nonSavingsIncome = employmentIncome + inc.propertyIncome + inc.otherNonSavingsIncome;
-  const netIncome = nonSavingsIncome + inc.savingsInterest + inc.dividends;
+  // §1 Income components — the only place these figures are derived.
+  const ic = computeIncomeComponents(inc, pension, probe);
 
-  // 4. Relief-at-source relief limit: higher of relevant UK earnings and the basic amount.
-  const relevantEarnings = cashPay + inc.taxableBenefits;
-  const reliefLimit = Math.max(relevantEarnings, rules.pensions.basicAmount);
+  // Employer NI and any share of the salary-sacrifice saving passed to the pension.
+  const employerNiNow = employerNi(ic.classOneEarnings, rules);
+  if (opts.method === 'salary-sacrifice' && additionalGross > 0 && inputs.additional.employerNiPassThroughPercent > 0) {
+    const before = employerNi(ic.classOneEarnings + Math.min(additionalGross, pension.salarySacrifice), rules);
+    const passThrough = roundPence(((before - employerNiNow) * inputs.additional.employerNiPassThroughPercent) / 100);
+    pension = { ...pension, employerOther: pension.employerOther + passThrough };
+  }
+
+  // §1.6 Relief-at-source relief limit: higher of UK taxable earnings and the basic amount, shared with net pay.
+  const reliefLimit = Math.max(ic.taxableEarnings, rules.pensions.basicAmount);
   const rasGross = pension.rasWorkplaceGross + pension.rasPersonalGross;
   const rasRelievedGross = Math.min(rasGross, nonNeg(reliefLimit - pension.netPay));
   const rasUnrelieved = rasGross - rasRelievedGross;
@@ -102,60 +108,65 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
       id: 'ras-exceeds-relief-limit',
       severity: 'warning',
       category: 'pension',
-      message: `Personal contributions above your relevant UK earnings (or £3,600 if higher) do not get tax relief. £${(rasUnrelieved / 100).toLocaleString('en-GB', { maximumFractionDigits: 2 })} gross has been treated as unrelieved: it does not reduce adjusted net income and no basic-rate top-up is assumed on it.`,
+      message: `Tax relief on personal contributions is limited to your UK taxable earnings (or £3,600 if higher). £${(rasUnrelieved / 100).toLocaleString('en-GB', { maximumFractionDigits: 2 })} gross has been treated as unrelieved: it does not reduce adjusted net income and no basic-rate top-up is assumed on it.`,
     });
   }
-  const rasRate = rules.pensions.reliefAtSourceBasicRate;
-  const rasCashPaid = roundPence(rasRelievedGross * (1 - rasRate)) + rasUnrelieved;
+  const rasCashPaid = roundPence(rasRelievedGross * (1 - rules.pensions.reliefAtSourceBasicRate)) + rasUnrelieved;
 
-  // 5. Adjusted net income.
+  // §1.5 Adjusted net income.
   const giftAidGross = grossUpAtBasicRate(inputs.giftAidNet, rules.giftAid.basicRate);
-  const ani = adjustedNetIncome({ netIncome, reliefAtSourceGross: rasRelievedGross, giftAidGross });
+  const ani = adjustedNetIncome({ netIncome: ic.netIncome, reliefAtSourceGross: rasRelievedGross, giftAidGross });
 
-  // 6. Income Tax (final) and as collected before any claim.
+  // §3 Income Tax: final, and as collected before any claim for RAS / Gift Aid relief.
   const taxBase = {
     rules,
     jurisdiction: inputs.jurisdiction,
-    nonSavingsIncome,
+    nonSavingsIncome: ic.nonSavingsIncome,
     savingsIncome: inc.savingsInterest,
     dividendIncome: inc.dividends,
   };
-  const incomeTax = calculateIncomeTax({ ...taxBase, adjustedNetIncome: ani, bandExtension: rasRelievedGross + giftAidGross });
-  const beforeClaims = calculateIncomeTax({ ...taxBase, adjustedNetIncome: netIncome, bandExtension: 0 });
+  const bandExtension = rasRelievedGross + giftAidGross;
+  const incomeTax = calculateIncomeTax({ ...taxBase, adjustedNetIncome: ani, bandExtension });
+  const beforeClaims = calculateIncomeTax({ ...taxBase, adjustedNetIncome: ic.netIncome, bandExtension: 0 });
   const reliefToClaim = nonNeg(beforeClaims.total - incomeTax.total);
 
-  // 7. NI and student loans (both on Class 1 earnings, i.e. after salary sacrifice).
-  const ni = employeeNi(cashPay, rules);
-  const studentLoan = studentLoanRepayment(cashPay, inputs.studentLoan, rules);
+  // Gift Aid: donations must not exceed 4× the tax paid (GOV.UK Gift Aid). CGT is not modelled.
+  if (inputs.giftAidNet > 0) {
+    const basicRateTaxReclaimed = giftAidGross - inputs.giftAidNet;
+    if (basicRateTaxReclaimed > incomeTax.total) {
+      warnings.push({
+        id: 'gift-aid-exceeds-tax',
+        severity: 'warning',
+        category: 'scope',
+        message: `Gift Aid donations of £${(inputs.giftAidNet / 100).toLocaleString('en-GB')} are more than 4 times the Income Tax calculated here. Unless you pay enough Capital Gains Tax to cover the difference, HMRC may ask you to pay the £${((basicRateTaxReclaimed - incomeTax.total) / 100).toLocaleString('en-GB', { maximumFractionDigits: 2 })} shortfall. This is not included in the figures.`,
+      });
+    }
+  }
 
-  // 8. Child Benefit charge.
+  // §4 NI and student loans on Class 1 earnings.
+  const ni = employeeNi(ic.classOneEarnings, rules);
+  const studentLoan = studentLoanRepayment(ic.classOneEarnings, inputs.studentLoan, rules);
+
+  // Child Benefit charge (separate from take-home).
   const cc = inputs.childcare;
   const partnerAni = cc.hasPartner === 'yes' ? cc.partnerAni : null;
   const hicbc = highIncomeChildBenefitCharge(inputs.childBenefitAnnual, ani, partnerAni, rules);
 
-  // 9. Annual allowance.
+  // §6 Annual allowance.
   const annualAllowance = annualAllowanceCheck({
     rules,
     allowance: inputs.pensionAllowance,
     pension,
     rasRelievedGross,
-    netIncome,
+    netIncome: ic.netIncome,
     chargeFor: (excess) =>
-      calculateIncomeTax({
-        ...taxBase,
-        nonSavingsIncome: nonSavingsIncome + excess,
-        adjustedNetIncome: ani,
-        bandExtension: rasRelievedGross + giftAidGross,
-      }).total - incomeTax.total,
+      calculateIncomeTax({ ...taxBase, nonSavingsIncome: ic.nonSavingsIncome + excess, adjustedNetIncome: ani, bandExtension }).total - incomeTax.total,
   });
 
-  // 10. Cash position.
-  const otherCash = inc.propertyIncome + inc.otherNonSavingsIncome + inc.savingsInterest + inc.dividends;
-  const grossCashIncome = cashPay + otherCash;
+  // §5 Cash position.
+  const grossCashIncome = ic.classOneEarnings + inc.propertyIncome + inc.otherNonSavingsIncome + inc.savingsInterest + inc.dividends;
   const takeHome = grossCashIncome - pension.netPay - rasCashPaid - incomeTax.total - ni.total - studentLoan.total;
-
   const employeeFundedGross = pension.salarySacrifice + pension.netPay + rasGross;
-  const employerContribution = pension.employerOther;
 
   if (opts.method && isReliefAtSource(opts.method) && reliefToClaim > 0 && additionalGross > 0) {
     warnings.push({
@@ -171,10 +182,12 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
     label: opts.label,
     method: opts.method,
     additionalGross,
-    contractualPay,
-    cashPayAfterSacrifice: cashPay,
-    totalIncome: netIncome,
+    contractualPay: ic.contractualPay,
+    cashPayAfterSacrifice: ic.classOneEarnings,
+    employmentIncome: ic.employmentIncome,
+    totalIncome: ic.netIncome,
     adjustedNetIncome: ani,
+    giftAidGross,
     incomeTax,
     incomeTaxBeforeClaims: beforeClaims.total,
     reliefToClaim,
@@ -184,9 +197,10 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
     pension,
     rasRelievedGross,
     rasCashPaid,
+    employeePensionCash: pension.salarySacrifice + pension.netPay + rasCashPaid,
     employeeFundedGross,
-    employerContribution,
-    totalPensionInvestment: employeeFundedGross + employerContribution,
+    employerContribution: pension.employerOther,
+    totalPensionInvestment: employeeFundedGross + pension.employerOther,
     takeHome,
     grossCashIncome,
     annualAllowance,

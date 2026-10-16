@@ -15,3 +15,4 @@ export * from './optimiser';
 export * from './compare';
 export * from './calculate';
 export * from './defaults';
+export * from './validate';
