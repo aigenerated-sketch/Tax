@@ -6,9 +6,11 @@ import type { CalculatorInputs, OptimiserResult, Pence, PensionMethod } from './
  * Largest additional gross contribution that the chosen method can carry while still
  * reducing adjusted net income:
  *  - salary sacrifice: cannot exceed remaining cash pay (salary + bonus − existing sacrifice);
- *  - net pay: cannot exceed remaining pay after sacrifice and existing net-pay contributions;
- *  - relief at source: relief limited to the higher of relevant UK earnings and £3,600,
- *    less personal contributions already made.
+ *  - net pay: cannot exceed remaining pay after sacrifice, existing DC net-pay contributions and
+ *    DB member contributions;
+ *  - relief at source: relief limited to the higher of relevant UK earnings and £3,600, less
+ *    personal contributions already made (DC net pay, DB member contributions and existing
+ *    relief-at-source contributions, including other schemes).
  * National Minimum Wage limits on salary sacrifice and scheme-specific caps are NOT modelled.
  */
 export function maxFeasibleAdditional(inputs: CalculatorInputs, method: PensionMethod): Pence {

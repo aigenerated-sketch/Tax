@@ -267,7 +267,7 @@ export function Methodology() {
       <h2>Calculation order</h2>
       <ol>
         <li>Existing pension figures are converted to gross amounts by method (net relief-at-source payments are grossed up by 100/80).</li>
-        <li>Cash pay = salary + bonus − salary sacrifice. Employment income = cash pay − net-pay contributions + taxable benefits.</li>
+        <li>Cash pay = salary + bonus − salary sacrifice. Employment income = cash pay − net-pay contributions (including defined benefit member contributions) + taxable benefits.</li>
         <li>Net income = employment income + property + other + savings + dividends.</li>
         <li>ANI = net income − relieved relief-at-source gross contributions − grossed-up Gift Aid.</li>
         <li>Personal allowance from ANI; set against income components in the way that gives the lowest tax (ITA 2007 s25(2) — every priority order is tried; in practice this is non-savings first). From 2027-28 a fixed order applies (s25(3A)).</li>

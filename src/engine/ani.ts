@@ -10,7 +10,10 @@ export interface IncomeComponents {
   contractualPay: Pence;
   /** §1.1 Class 1 earnings = salary + bonus − salary sacrifice. Basis for NI and student loans. Net pay is NOT deducted. */
   classOneEarnings: Pence;
-  /** §1.2 Employment income = Class 1 earnings − net-pay contributions + taxable benefits. */
+  /**
+   * §1.2 Employment income = Class 1 earnings − all net-pay deductions + taxable benefits. The caller
+   * passes DC net pay plus DB member contributions as `netPay` (both are deducted before tax).
+   */
   employmentIncome: Pence;
   /** §1.3 Non-savings income = employment income + property + other non-savings income. */
   nonSavingsIncome: Pence;

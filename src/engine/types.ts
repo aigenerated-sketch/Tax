@@ -202,7 +202,10 @@ export interface NationalInsuranceResult {
 export interface ResolvedPension {
   /** Salary sacrificed (becomes an employer contribution). */
   salarySacrifice: Pence;
-  /** Employee net-pay contributions deducted from pay before tax. */
+  /**
+   * Employee DC net-pay contributions deducted from pay before tax. DB member contributions are held
+   * separately (ScenarioResult.dbMemberContributions) so they are not counted as DC pension input.
+   */
   netPay: Pence;
   /** Gross relief-at-source contributions paid through workplace payroll. */
   rasWorkplaceGross: Pence;
@@ -259,7 +262,10 @@ export interface ScenarioResult {
   contractualPay: Pence;
   /** Cash employment pay after salary sacrifice (before tax, NI and other deductions). */
   cashPayAfterSacrifice: Pence;
-  /** Employment income: Class 1 earnings − net-pay contributions + taxable benefits (conventions §1.2). */
+  /**
+   * Employment income: Class 1 earnings − DC net-pay contributions − DB member contributions
+   * + taxable benefits (conventions §1.2).
+   */
   employmentIncome: Pence;
   /** Net income (conventions §1.4): before PA, after salary sacrifice and net pay, before RAS and Gift Aid deductions. */
   totalIncome: Pence;
@@ -284,11 +290,14 @@ export interface ScenarioResult {
   dbMemberContributions: Pence;
   /** Pay given up or cash paid into pensions by the employee: sacrifice + net pay + DB contributions + RAS cash (conventions §5). */
   employeePensionCash: Pence;
-  /** Gross pension contribution funded by the employee (sacrifice + net pay + RAS gross). */
+  /**
+   * Gross DC pension contribution funded by the employee (sacrifice + DC net pay + RAS gross). Excludes DB
+   * member contributions, whose value is inside the DB pension input.
+   */
   employeeFundedGross: Pence;
   /** Employer contributions excluding salary sacrifice. */
   employerContribution: Pence;
-  /** Everything going into pensions in the year (DC). */
+  /** Everything going into DC pensions in the year (excludes DB accrual and DB member contributions). */
   totalPensionInvestment: Pence;
   /** Cash in hand after tax, NI, student loan and pension deductions (excludes Child Benefit/HICBC and Gift Aid). */
   takeHome: Pence;

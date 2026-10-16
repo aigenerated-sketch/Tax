@@ -11,7 +11,8 @@ All money is integer pence. Inputs are annual amounts for one tax year and one i
 |---|---|---|
 | `S`, `B` | Salary, bonus | Contractual amounts **before** salary sacrifice |
 | `SS` | Salary sacrificed | Existing + additional sacrifice (becomes an employer contribution) |
-| `NP` | Net-pay contributions | Employee contributions deducted from pay before Income Tax |
+| `NP` | Net-pay contributions (DC) | Employee DC contributions deducted from pay before Income Tax |
+| `DBm` | DB member contributions | Employee contributions to a DB scheme, deducted from pay before Income Tax (also net pay; kept separate — §1.2, §6) |
 | `G_ras` | Relief-at-source gross | Net paid by the employee ÷ (1 − 20%) |
 | `G_ras,rel` | Relieved RAS gross | `min(G_ras, max(0, L − NP))`, `L = max(taxable earnings, £3,600)` |
 | `GA` | Gift Aid gross | Net donation ÷ (1 − 20%), i.e. × 1.25 |
@@ -116,20 +117,30 @@ components separately; childcare value is never part of them.
 
 ## 6. Annual allowance (estimate)
 
+Here `NP` is DC net pay only; `DBm` is the member's own DB contributions (§1.2), entered separately as
+`definedBenefitMemberContributions`.
+
 Pension input (DC) = `SS + NP + G_ras + employer contributions` (FA 2004 s233(1)) — **all** RAS
 contributions paid, including any part above the relief limit, because "relievable pension
 contributions" (s188) are not capped by earnings; the s190 limit restricts relief only. Plus the DB
-pension input entered by the user.
+pension input (from the scheme statement), which already includes the value of `DBm`, so `DBm` is
+never added to DC input.
+
 Threshold income = `NI_net + SS − G_ras,rel` (s228ZA(5): only RAS contributions *entitled to relief*
-are deducted; Gift Aid is not deducted). Adjusted income = `NI_net + NP + PIA − personal
-contributions` = `NI_net + NP + SS + employer + DB input` (s228ZA(4); DB member contributions are not
-collected, so this can overstate adjusted income for DB members).
+are deducted; Gift Aid is not deducted). `NI_net` is already after `DBm`, and threshold income does
+not add net pay back.
+
+Adjusted income (s228ZA(4)) = net income + net-pay deductions + total pension input − contributions
+paid by the individual
+= `NI_net + (NP + DBm) + (SS + NP + G_ras + employer + DB input) − (NP + G_ras + DBm)`
+= `NI_net + NP + SS + employer + DB input`.
+`DBm` is added back as a net-pay deduction and subtracted as a contribution paid by the individual,
+so it nets to nil: adjusted income for a DB member is net income (after `DBm`) plus the DB input,
+not the DB input plus `DBm` again.
+
 Taper when threshold income > £200,000 **and** adjusted income > £260,000; £1 per complete £2,
-minimum £10,000. MPAA (if triggered and DC > £10,000): DC excess charged; DB tested against the
-alternative allowance; carry-forward only adds to the alternative allowance (PTM055100).
-**DB member contributions** (`definedBenefitMemberContributions`) are net pay for tax, ANI and the relief
-limit, but are already inside the DB pension input, so they are not DC input and are not added back in
-adjusted income (s228ZA(4): + net-pay deductions + total PIA − contributions paid by the individual).
+minimum £10,000. With the MPAA, see "Chargeable amount (MPAA)" below; carry-forward only adds to the
+alternative allowance (PTM055100).
 
 **Chargeable amount (MPAA).** Default = total input − (allowance + carry-forward) (s227ZA). If the MPAA
 applies and DC input > £10,000, alternative = (DC − £10,000) + (DB − (allowance + carry-forward −
