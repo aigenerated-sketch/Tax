@@ -85,9 +85,10 @@ describe('annual allowance taper boundaries', () => {
   const run = (netIncome: number, employer: number) =>
     annualAllowanceCheck({
       rules: R26,
-      allowance: { definedBenefitMember: false, definedBenefitPensionInput: 0, otherPensionContributions: 0, mpaaTriggered: 'no', carryForward: 0 },
+      allowance: { definedBenefitMember: false, definedBenefitPensionInput: 0, otherPersonalRasGross: 0, otherEmployerContributions: 0, mpaaTriggered: 'no', carryForward: 0 },
       pension: { ...emptyPension(), employerOther: p(employer) },
       rasRelievedGross: 0,
+      rasGross: 0,
       netIncome: p(netIncome),
       chargeFor: () => 0,
     });

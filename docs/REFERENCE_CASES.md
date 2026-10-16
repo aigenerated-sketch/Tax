@@ -105,3 +105,44 @@ Other boundaries: HICBC (£2,000 entered) £0 at ANI £60,199, £20 at £60,200,
 ## Gift Aid 4× check
 
 Salary £20,000 → Income Tax (20,000 − 12,570) × 20% = £1,486. Donation £5,944 → reclaimed £1,486 = tax → no warning. £5,944.04 → £1,486.01 → warning. £8,000 → £2,000 → warning (shortfall £514).
+
+## Audit cases (October 2026)
+
+All hand-worked; England 2026/27 unless stated. Statutory basis in brackets.
+
+**Personal savings allowance (ITA s12B).**
+
+| Inputs | Working | Savings tax |
+|---|---|---|
+| £49,270 salary + £1,000 interest | total taxable 37,700 = basic limit → PSA £1,000 | £0 |
+| £49,271 + £1,000 | 37,701 > limit → PSA £500; 499 × 20% + 1 × 40% | £100.20 |
+| £49,271 + £1,000 + £1,000 SIPP gross | basic limit 38,700 → PSA £1,000 | £0 |
+| £49,271 + £1,000 + £800 Gift Aid paid | basic limit 38,700 → PSA £1,000 | £0 |
+| £49,000 + £1,000 interest + £300 dividends | top £30 is dividend-nil-rate income above 37,700 → "higher-rate income" → PSA £500; 500 × 20% | £100 |
+| £110,000 + £1,000 | PA 7,070; PSA £500; 500 × 40% | £200 |
+| £124,139 + £1,000 | PA £1; total 125,138 → PSA £500; 500 × 40% | £200 |
+| £124,141 + £1,000 | PA 0; total 125,141 → PSA £0; 999 × 40% + 1 × 45% | £400.05 |
+| £125,000 + £1,000 | PSA £0; 140 × 40% + 860 × 45% | £443 |
+| Scotland £45,000 + £1,000 | UK position 33,430 < 37,700 → PSA £1,000 (s12B(8)) | £0 |
+| Scotland £49,271 + £1,000 | as rUK | £100.20 |
+
+**Starting rate (ITA s12).** £17,569 + £2,000 interest → 1 at 0%, 1,000 PSA, 999 × 20% = £199.80;
+£17,570 → £200; £17,571 → £200. £14,000 + £3,000 interest + £10,000 dividends → NS £286, savings £0,
+dividends 9,500 × 10.75% = £1,021.25. £14,000 + £6,000 interest + £1,000 SIPP → savings £286 (no extension).
+
+**Annual allowance (FA 2004 s233, s228ZA).**
+
+| Inputs | Expected |
+|---|---|
+| Salary £30,000, property £50,000, SIPP £70,000 gross | relieved £30,000; PIA £70,000; threshold income 80,000 − 30,000 = £50,000; excess £10,000 |
+| Salary £50,000, SIPP £50,000.01 | PIA £50,000.01 |
+| £100k, RAS £10,000 + employer £5,000 | PIA £15,000 |
+| £100k, sacrifice £10,000 + employer £3,000 | PIA £13,000 |
+| £100k, net pay £8,000 + employer £4,000 | PIA £12,000 |
+| £150k, DB £20,000 + sacrifice £45,000 | total £65,000, excess £5,000, unverified |
+| MPAA, employer £12,000 | excess £2,000; with DB £52,000 → £4,000 |
+| £150k, sacrifice £59,999.99 / £60,000 / £60,000.01 | excess £0 / £0 / £0.01 |
+| £200k, sacrifice £70,000, carry-forward £10,000 / £9,999.99 | excess £0 / £0.01 |
+| £150k, sacrifice £70,000 | charge £10,000 × 40% = £4,000 |
+| £300k; sacrifice £20k; SIPP £10k gross; Gift Aid £5k; employer £10k | net income 280,000; threshold 290,000; adjusted 310,000; allowance £35,000 |
+| £110k; net pay £5k; other SIPP £4k gross; other employer £2k; extra SIPP £3k | ANI £98,000; PIA £14,000; band extension £7,000; RAS cash £5,600; adjusted income £112,000 (no extra SIPP) |

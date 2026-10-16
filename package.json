@@ -1,7 +1,7 @@
 {
   "name": "uk-100k-tax-trap-calculator",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "UK \u00a3100k Tax Trap & Pension Relief Optimizer \u2014 a static, privacy-first calculator.",
   "scripts": {

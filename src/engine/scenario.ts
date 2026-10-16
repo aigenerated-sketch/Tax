@@ -4,7 +4,7 @@ import { adjustedNetIncome, computeIncomeComponents, grossUpAtBasicRate } from '
 import { annualAllowanceCheck } from './annualAllowance';
 import { highIncomeChildBenefitCharge } from './hicbc';
 import { calculateIncomeTax } from './incomeTax';
-import { nonNeg, roundPence } from './money';
+import { applyRate, moneyText, nonNeg, roundPence } from './money';
 import { employeeNi, employerNi } from './nationalInsurance';
 import { employerMatch, isReliefAtSource, resolveExistingPension, withAdditional } from './pension';
 import { studentLoanRepayment } from './studentLoan';
@@ -59,6 +59,9 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
   // Pension arrangements. Existing figures are resolved against the original income so a probe never changes them.
   const existing = resolveExistingPension(inputs.existingPension, inc, rules);
   warnings.push(...existing.warnings);
+  // Other schemes (conventions §1.7): a second personal RAS contribution and employer contributions elsewhere.
+  existing.pension.rasPersonalGross += inputs.pensionAllowance.otherPersonalRasGross;
+  existing.pension.employerOther += inputs.pensionAllowance.otherEmployerContributions;
   const additionalGross = opts.method ? opts.additionalGross : 0;
   let pension = opts.method ? withAdditional(existing.pension, opts.method, additionalGross) : { ...existing.pension };
   if (opts.method && additionalGross > 0) {
@@ -108,10 +111,11 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
       id: 'ras-exceeds-relief-limit',
       severity: 'warning',
       category: 'pension',
-      message: `Tax relief on personal contributions is limited to your UK taxable earnings (or £3,600 if higher). £${(rasUnrelieved / 100).toLocaleString('en-GB', { maximumFractionDigits: 2 })} gross has been treated as unrelieved: it does not reduce adjusted net income and no basic-rate top-up is assumed on it.`,
+      message: `Tax relief on personal contributions is limited to your UK taxable earnings (or £3,600 if higher). ${moneyText(rasUnrelieved)} gross has been treated as unrelieved: it does not reduce adjusted net income and no basic-rate top-up is assumed on it, but it still counts towards your annual allowance. Schemes often refund excess contributions — check with your provider.`,
     });
   }
-  const rasCashPaid = roundPence(rasRelievedGross * (1 - rules.pensions.reliefAtSourceBasicRate)) + rasUnrelieved;
+  // Cash = gross − provider top-up (basic-rate relief on the relieved part only) + unrelieved part paid in full.
+  const rasCashPaid = rasRelievedGross - applyRate(rasRelievedGross, rules.pensions.reliefAtSourceBasicRate) + rasUnrelieved;
 
   // §1.5 Adjusted net income.
   const giftAidGross = grossUpAtBasicRate(inputs.giftAidNet, rules.giftAid.basicRate);
@@ -138,7 +142,7 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
         id: 'gift-aid-exceeds-tax',
         severity: 'warning',
         category: 'scope',
-        message: `Gift Aid donations of £${(inputs.giftAidNet / 100).toLocaleString('en-GB')} are more than 4 times the Income Tax calculated here. Unless you pay enough Capital Gains Tax to cover the difference, HMRC may ask you to pay the £${((basicRateTaxReclaimed - incomeTax.total) / 100).toLocaleString('en-GB', { maximumFractionDigits: 2 })} shortfall. This is not included in the figures.`,
+        message: `Gift Aid donations of ${moneyText(inputs.giftAidNet)} are more than 4 times the Income Tax calculated here. Unless you pay enough Capital Gains Tax to cover the difference, HMRC may ask you to pay the ${moneyText(basicRateTaxReclaimed - incomeTax.total)} shortfall. This is not included in the figures.`,
       });
     }
   }
@@ -158,6 +162,7 @@ export function calculateScenario(inputs: CalculatorInputs, opts: ScenarioOption
     allowance: inputs.pensionAllowance,
     pension,
     rasRelievedGross,
+    rasGross,
     netIncome: ic.netIncome,
     chargeFor: (excess) =>
       calculateIncomeTax({ ...taxBase, nonSavingsIncome: ic.nonSavingsIncome + excess, adjustedNetIncome: ani, bandExtension }).total - incomeTax.total,

@@ -148,4 +148,36 @@ describe('calculator UI', () => {
     expect(screen.getByText('This method does not reduce National Insurance.')).toBeInTheDocument();
     expect(screen.getByTestId('slider-takehome')).toHaveTextContent('−£4,000.00');
   });
+
+  it('audit F5: partner questions appear for the Child Benefit charge without a childcare assessment', async () => {
+    const user = userEvent.setup();
+    setup({ salary: '70000' });
+    expect(screen.queryByText('Do you have a partner who lives with you?')).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText(/Child Benefit received per year/), '2000');
+    expect(screen.getByText('Do you have a partner who lives with you?')).toBeInTheDocument();
+  });
+
+  it('audit F4: Plan 5 in 2025/26 shows a visible error and hides results', async () => {
+    const user = userEvent.setup();
+    setup({ salary: '60000', studentLoanPlan: 'plan5' });
+    expect(screen.getByTestId('current-ani')).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/^Tax year$/), '2025-26');
+    expect(screen.getAllByText(/not available in 2025\/26/).length).toBeGreaterThan(0);
+    expect(screen.queryByTestId('current-ani')).not.toBeInTheDocument();
+  });
+
+  it('audit F3: childcare asks each parent’s age band and lists all three minimum-income amounts', () => {
+    setup({ salary: '90000', childcareAssess: true, hasPartner: 'yes' });
+    expect(screen.getByLabelText(/Your age band/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Partner’s age band/)).toBeInTheDocument();
+    expect(screen.getByText(/£2,643.68 if aged 21 or over; £2,256.80 if 18–20; £1,664 if under 18 or an apprentice/)).toBeInTheDocument();
+  });
+
+  it('audit F2: other-scheme personal contributions reduce adjusted net income', async () => {
+    const user = userEvent.setup();
+    setup({ salary: '110000' });
+    await user.click(screen.getByText('Pension annual allowance details'));
+    await user.type(screen.getByLabelText(/Other personal pension contributions you already make/), '4000');
+    expect(screen.getByTestId('current-ani')).toHaveTextContent('£106,000');
+  });
 });

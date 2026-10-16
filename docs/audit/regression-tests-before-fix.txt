@@ -1,0 +1,13 @@
+Run against commit 104f591 (pre-fix) on 2026-10-16
+   × F1 annual allowance counts unrelieved personal contributions > PIA £70,000 and excess £10,000
+   × F1 annual allowance counts unrelieved personal contributions > one penny above the relief limit still counts in full
+   × F2 other schemes: personal RAS and employer contributions > ANI, PIA, band extension and cash
+   × F2 other schemes: personal RAS and employer contributions > employer contributions to other schemes raise adjusted income
+   × F3 childcare minimum income uses each parent’s age band > quotes £2,256.80 for an 18–20 year old and £1,664 for an apprentice partner
+   × F3 childcare minimum income uses each parent’s age band > age unknown: lists all three amounts rather than assuming 21+
+   × F4 student loan plan unavailable in the selected year is an error > Plan 5 in 2025/26
+   × F5 partner ANI reaches the Child Benefit charge without a childcare assessment > charge falls on the partner
+   × F6 no assumed disability answer > defaults to "Not sure"
+   × F7 verification status is reported per dimension > 2026/27 separates source, legal-rule, test and external validation status
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  10 failed (10)

@@ -39,6 +39,9 @@ if (siteUrl) {
   writeFileSync(join(dist, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}${base}/sitemap.xml\n`);
 } else {
   writeFileSync(join(dist, 'robots.txt'), 'User-agent: *\nAllow: /\n');
-  console.warn('[prerender] SITE_URL not set: canonical links and sitemap.xml were not generated.');
+  console.warn(
+    '[prerender] SITE_URL not set: canonical links, Open Graph URLs and sitemap.xml were not generated. ' +
+      'This is expected for local builds. For production, build with SITE_URL=https://<your-domain> (see README "Deployment").',
+  );
 }
 console.log(`[prerender] wrote ${routes.length} route entries`);

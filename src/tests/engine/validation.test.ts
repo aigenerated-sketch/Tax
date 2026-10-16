@@ -64,10 +64,10 @@ describe('unsupported relief claims are flagged', () => {
 });
 
 describe('verification register', () => {
-  it('every official rule cites at least one gov.uk or gov.scot page', () => {
+  it('every official rule cites at least one gov.uk, gov.scot or legislation.gov.uk page', () => {
     for (const r of VERIFICATION_2026_27.filter((x) => x.level === 'official')) {
       expect(r.sources.length, r.rule).toBeGreaterThan(0);
-      expect(r.sources.some((u) => /^https:\/\/www\.gov\.(uk|scot)\//.test(u)), r.rule).toBe(true);
+      expect(r.sources.some((u) => /^https:\/\/www\.(gov\.uk|gov\.scot|legislation\.gov\.uk)\//.test(u)), r.rule).toBe(true);
     }
   });
   it('register values come from the live rules (Scottish bands)', () => {

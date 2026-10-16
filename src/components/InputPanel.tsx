@@ -1,5 +1,5 @@
 import { METHOD_LABELS } from '../engine/pension';
-import type { Jurisdiction, PensionMethod } from '../engine/types';
+import type { Jurisdiction, ParentAgeBand, PensionMethod } from '../engine/types';
 import type { FieldErrors, FormState } from '../lib/form';
 import { SUPPORTED_TAX_YEARS, TAX_YEARS } from '../rules';
 import { Checkbox, MoneyField, PercentField, RadioGroup, Section, SelectField, YES_NO_UNSURE } from './fields';
@@ -15,6 +15,32 @@ export const METHOD_OPTIONS: { value: PensionMethod; label: string }[] = (Object
   value: m,
   label: METHOD_LABELS[m],
 }));
+
+const AGE_BANDS: { value: ParentAgeBand; label: string }[] = [
+  { value: '21-plus', label: '21 or over' },
+  { value: '18-20', label: '18 to 20' },
+  { value: 'under-18-or-apprentice', label: 'Under 18, or an apprentice' },
+  { value: 'unsure', label: 'Not sure / prefer not to say' },
+];
+
+const gbp = (p: number) => `£${(p / 100).toLocaleString('en-GB', { minimumFractionDigits: p % 100 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
+
+/** Partner questions, used by both childcare and the Child Benefit charge. */
+function PartnerFields({ form, errors, set }: Props) {
+  return (
+    <>
+      <RadioGroup name="hasPartner" label="Do you have a partner who lives with you?" value={form.hasPartner} onChange={(v) => set('hasPartner', v)} options={YES_NO_UNSURE} />
+      {form.hasPartner === 'yes' && (
+        <>
+          <Checkbox name="partnerAniKnown" label="I know my partner’s expected adjusted net income" checked={form.partnerAniKnown} onChange={(v) => set('partnerAniKnown', v)} />
+          {form.partnerAniKnown && (
+            <MoneyField name="partnerAni" label="Partner’s expected adjusted net income" required value={form.partnerAni} error={errors.partnerAni} onChange={(v) => set('partnerAni', v)} />
+          )}
+        </>
+      )}
+    </>
+  );
+}
 
 interface Props {
   form: FormState;
@@ -256,25 +282,31 @@ export function InputPanel({ form, errors, set }: Props) {
             <RadioGroup name="childDisabled" label="Is the child disabled (for Tax-Free Childcare purposes)?" value={form.childDisabled} onChange={(v) => set('childDisabled', v)} options={YES_NO_UNSURE} />
             <RadioGroup name="usesTaxFreeChildcare" label="Do you use or expect to use Tax-Free Childcare?" value={form.usesTaxFreeChildcare} onChange={(v) => set('usesTaxFreeChildcare', v)} options={YES_NO_UNSURE} />
             <SelectField name="childcareNation" label="Which UK nation’s childcare schemes apply?" value={form.childcareNation} onChange={(v) => set('childcareNation', v)} options={JURISDICTIONS} />
-            <RadioGroup name="hasPartner" label="Do you have a partner who lives with you?" value={form.hasPartner} onChange={(v) => set('hasPartner', v)} options={YES_NO_UNSURE} />
-            {form.hasPartner === 'yes' && (
-              <>
-                <Checkbox name="partnerAniKnown" label="I know my partner’s expected adjusted net income" checked={form.partnerAniKnown} onChange={(v) => set('partnerAniKnown', v)} />
-                {form.partnerAniKnown && (
-                  <MoneyField name="partnerAni" label="Partner’s expected adjusted net income" required value={form.partnerAni} error={errors.partnerAni} onChange={(v) => set('partnerAni', v)} />
-                )}
-              </>
-            )}
+            <PartnerFields form={form} errors={errors} set={set} />
+            <p className="hint">
+              Minimum earnings over the next 3 months ({rules.label}): {gbp(rules.childcare.minimumIncomeQuarterly21Plus)} if aged 21 or over;{' '}
+              {gbp(rules.childcare.minimumIncomeQuarterly18to20)} if 18–20; {gbp(rules.childcare.minimumIncomeQuarterlyUnder18OrApprentice)} if under 18 or an apprentice.
+            </p>
+            <SelectField name="userAgeBand" label="Your age band (sets your minimum-income amount)" value={form.userAgeBand} onChange={(v) => set('userAgeBand', v)} options={AGE_BANDS} />
             <RadioGroup
               name="userMeetsMinimumIncome"
-              label={`Do you expect to earn at least £${(rules.childcare.minimumIncomeQuarterly21Plus / 100).toLocaleString('en-GB', { minimumFractionDigits: 2 })} over the next 3 months (aged 21+)?`}
-              hint="Lower amounts apply if you are under 21 or an apprentice."
+              label="Do you expect to earn at least the minimum for your age over the next 3 months?"
+              hint="Earnings from employment or self-employment before tax. Dividends, interest, property and pension income do not count."
               value={form.userMeetsMinimumIncome}
               onChange={(v) => set('userMeetsMinimumIncome', v)}
               options={YES_NO_UNSURE}
             />
             {form.hasPartner === 'yes' && (
-              <RadioGroup name="partnerMeetsMinimumIncome" label="Does your partner expect to meet the minimum income?" value={form.partnerMeetsMinimumIncome} onChange={(v) => set('partnerMeetsMinimumIncome', v)} options={YES_NO_UNSURE} />
+              <>
+                <SelectField name="partnerAgeBand" label="Partner’s age band" value={form.partnerAgeBand} onChange={(v) => set('partnerAgeBand', v)} options={AGE_BANDS} />
+                <RadioGroup
+                  name="partnerMeetsMinimumIncome"
+                  label="Does your partner expect to earn at least the minimum for their age over the next 3 months?"
+                  value={form.partnerMeetsMinimumIncome}
+                  onChange={(v) => set('partnerMeetsMinimumIncome', v)}
+                  options={YES_NO_UNSURE}
+                />
+              </>
             )}
             <RadioGroup
               name="taxFreeChildcareBars"
@@ -303,13 +335,14 @@ export function InputPanel({ form, errors, set }: Props) {
             name="studentLoanPlan"
             label="Student loan plan"
             value={form.studentLoanPlan}
+            error={errors.studentLoanPlan}
             onChange={(v) => set('studentLoanPlan', v)}
             options={[
               { value: 'none', label: 'None' },
               { value: 'plan1', label: 'Plan 1' },
               { value: 'plan2', label: 'Plan 2' },
               { value: 'plan4', label: 'Plan 4 (Scotland)' },
-              ...(rules.studentLoans.plans.plan5 ? [{ value: 'plan5' as const, label: 'Plan 5' }] : []),
+              { value: 'plan5', label: rules.studentLoans.plans.plan5 ? 'Plan 5' : `Plan 5 (not available in ${rules.label})` },
             ]}
           />
           <Checkbox name="postgraduateLoan" label="Postgraduate loan" checked={form.postgraduateLoan} onChange={(v) => set('postgraduateLoan', v)} />
@@ -322,6 +355,12 @@ export function InputPanel({ form, errors, set }: Props) {
           error={errors.childBenefitAnnual}
           onChange={(v) => set('childBenefitAnnual', v)}
         />
+        {!form.childcareAssess && form.childBenefitAnnual.trim() !== '' && (
+          <>
+            <p className="hint">The charge is paid by the partner with the higher adjusted net income, so your partner’s income matters.</p>
+            <PartnerFields form={form} errors={errors} set={set} />
+          </>
+        )}
         <details className="more">
           <summary>Pension annual allowance details</summary>
           <RadioGroup
@@ -347,12 +386,20 @@ export function InputPanel({ form, errors, set }: Props) {
             />
           )}
           <MoneyField
-            name="otherPensionContributions"
-            label="Other pension contributions (gross) not entered above"
-            hint="Counted against the annual allowance only."
-            value={form.otherPensionContributions}
-            error={errors.otherPensionContributions}
-            onChange={(v) => set('otherPensionContributions', v)}
+            name="otherPersonalRasGross"
+            label="Other personal pension contributions you already make (gross)"
+            hint="E.g. an existing SIPP alongside your workplace scheme: what you pay plus the 20% top-up. Treated as relief at source — it reduces adjusted net income and counts towards the annual allowance."
+            value={form.otherPersonalRasGross}
+            error={errors.otherPersonalRasGross}
+            onChange={(v) => set('otherPersonalRasGross', v)}
+          />
+          <MoneyField
+            name="otherEmployerContributions"
+            label="Employer contributions to other pension schemes"
+            hint="Counted towards the annual allowance and the taper’s adjusted income. Does not affect your tax."
+            value={form.otherEmployerContributions}
+            error={errors.otherEmployerContributions}
+            onChange={(v) => set('otherEmployerContributions', v)}
           />
         </details>
       </Section>

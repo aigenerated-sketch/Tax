@@ -1,5 +1,5 @@
 import type { Jurisdiction, TaxBand, TaxYearRules } from '../rules/types';
-import { nonNeg, roundPence } from './money';
+import { applyRate, nonNeg } from './money';
 import { personalAllowance } from './personalAllowance';
 import type { IncomeTaxResult, Pence, TaxSlice } from './types';
 
@@ -44,7 +44,7 @@ function sliceAgainst(
       const from = Math.max(pos, lower);
       const take = Math.min(remaining, upper - from);
       if (take > 0) {
-        out.push({ incomeType, label: seg.label, rate: seg.rate, amount: take, tax: roundPence(take * seg.rate) });
+        out.push({ incomeType, label: seg.label, rate: seg.rate, amount: take, tax: applyRate(take, seg.rate) });
         pos = from + take;
         remaining -= take;
       }
@@ -70,17 +70,74 @@ function extendBands(bands: TaxBand[], startIndex: number, extension: Pence): Se
  * jurisdiction's bands; savings and dividends always use UK-wide bands and rates, with
  * non-savings income occupying the UK bands first.
  */
+export type IncomeComponent = 'non-savings' | 'savings' | 'dividends';
+
+const ALL_ORDERS: IncomeComponent[][] = [
+  ['non-savings', 'savings', 'dividends'],
+  ['non-savings', 'dividends', 'savings'],
+  ['savings', 'non-savings', 'dividends'],
+  ['savings', 'dividends', 'non-savings'],
+  ['dividends', 'non-savings', 'savings'],
+  ['dividends', 'savings', 'non-savings'],
+];
+
+/**
+ * Personal allowance allocation (ITA 2007 s25).
+ * - 'most-favourable' (to 2026-27, s25(2)): allowances are deducted "in the way which will result in
+ *   the greatest reduction" in liability. Every priority order is evaluated and the lowest total wins;
+ *   ties go to non-savings first. Only priority-order ("corner") splits are evaluated; a brute-force
+ *   test over fractional splits on a grid of mixed incomes found no cheaper split (U13).
+ * - 'non-savings-first' (from 2027-28, s25(3A)): non-savings, then savings, then dividends.
+ */
 export function calculateIncomeTax(input: IncomeTaxInput): IncomeTaxResult {
+  if (input.rules.allowanceAllocation === 'non-savings-first') return calculateWithOrder(input, ALL_ORDERS[0] as IncomeComponent[]);
+  let best: IncomeTaxResult | null = null;
+  for (const order of ALL_ORDERS) {
+    const r = calculateWithOrder(input, order);
+    if (best === null || r.total < best.total) best = r;
+  }
+  return best as IncomeTaxResult;
+}
+
+/** Income Tax with the personal allowance set against components in the given priority order. */
+export function calculateWithOrder(input: IncomeTaxInput, order: IncomeComponent[]): IncomeTaxResult {
+  const pa = personalAllowance(input.adjustedNetIncome, input.rules);
+  const amounts: Record<IncomeComponent, number> = {
+    'non-savings': nonNeg(input.nonSavingsIncome),
+    savings: nonNeg(input.savingsIncome),
+    dividends: nonNeg(input.dividendIncome),
+  };
+  const used: Record<IncomeComponent, number> = { 'non-savings': 0, savings: 0, dividends: 0 };
+  let left = pa;
+  for (const c of order) {
+    used[c] = Math.min(left, amounts[c]);
+    left -= used[c];
+  }
+  return calculateWithAllocation(input, used, order);
+}
+
+/**
+ * Income Tax for an explicit split of the personal allowance between components. Exported so
+ * tests can brute-force every split and check that the s25(2) search finds the lowest liability.
+ * The split must not exceed the allowance or any component.
+ */
+export function calculateWithAllocation(
+  input: IncomeTaxInput,
+  used: Record<IncomeComponent, number>,
+  order: IncomeComponent[] = ['non-savings', 'savings', 'dividends'],
+): IncomeTaxResult {
   const { rules, jurisdiction } = input;
   const ns = nonNeg(input.nonSavingsIncome);
   const sav = nonNeg(input.savingsIncome);
   const div = nonNeg(input.dividendIncome);
   const ext = nonNeg(input.bandExtension);
-
   const pa = personalAllowance(input.adjustedNetIncome, rules);
-  const paNs = Math.min(pa, ns);
-  const paSav = Math.min(pa - paNs, sav);
-  const paDiv = Math.min(pa - paNs - paSav, div);
+  const paNs = used['non-savings'];
+  const paSav = used.savings;
+  const paDiv = used.dividends;
+  if (paNs < 0 || paSav < 0 || paDiv < 0 || paNs > ns || paSav > sav || paDiv > div || paNs + paSav + paDiv > pa) {
+    throw new RangeError('Invalid personal allowance split.');
+  }
 
   const tNs = ns - paNs;
   const tSav = sav - paSav;
@@ -103,7 +160,7 @@ export function calculateIncomeTax(input: IncomeTaxInput): IncomeTaxResult {
     const startingAvail = nonNeg(s.startingRateBand - tNs);
     const starting = Math.min(remainingSav, startingAvail);
     if (starting > 0) {
-      savSlices.push({ incomeType: 'savings', label: 'Starting rate for savings', rate: s.startingRate, amount: starting, tax: roundPence(starting * s.startingRate) });
+      savSlices.push({ incomeType: 'savings', label: 'Starting rate for savings', rate: s.startingRate, amount: starting, tax: applyRate(starting, s.startingRate) });
       pos += starting;
       remainingSav -= starting;
     }
@@ -165,6 +222,7 @@ export function calculateIncomeTax(input: IncomeTaxInput): IncomeTaxResult {
   const dividendTax = sum(divSlices);
 
   return {
+    allowanceOrder: order,
     personalAllowance: pa,
     personalAllowanceUsed: paNs + paSav + paDiv,
     taxableNonSavings: tNs,

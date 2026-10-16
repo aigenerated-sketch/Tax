@@ -70,8 +70,14 @@ export interface PensionAllowanceInputs {
   definedBenefitMember: boolean;
   /** Pension input amount for a DB scheme for the year, if known (from scheme statement). */
   definedBenefitPensionInput: Pence;
-  /** Other pension contributions not entered elsewhere (e.g. another scheme), gross. Counted only for AA. */
-  otherPensionContributions: Pence;
+  /**
+   * Personal relief-at-source contributions to OTHER schemes (e.g. an existing SIPP alongside a
+   * workplace scheme), gross. Treated exactly like an existing relief-at-source contribution:
+   * reduces ANI, extends bands, shares the relief limit, costs 80% in cash, counts for the AA.
+   */
+  otherPersonalRasGross: Pence;
+  /** Employer contributions to OTHER money purchase schemes. Pension input and adjusted income only. */
+  otherEmployerContributions: Pence;
   mpaaTriggered: YesNoUnsure;
   /** Verified unused allowance carried forward from the previous three years. null = not known. */
   carryForward: Pence | null;
@@ -98,6 +104,9 @@ export interface CalculatorInputs {
   childcare: ChildcareInputs;
 }
 
+/** Age band that sets a parent's childcare minimum-income threshold (GOV.UK free childcare / Tax-Free Childcare). */
+export type ParentAgeBand = '21-plus' | '18-20' | 'under-18-or-apprentice' | 'unsure';
+
 export type ChildAgeBand = 'under-9m' | '9m-to-2' | '3-to-4' | '5-to-11' | '12-to-16' | 'unsure';
 
 export interface ChildcareInputs {
@@ -110,7 +119,10 @@ export interface ChildcareInputs {
   hasPartner: YesNoUnsure;
   /** Partner's expected ANI; null = not known. */
   partnerAni: Pence | null;
-  /** Does each parent expect to earn at least the minimum income over the next 3 months? */
+  /** Each parent's age band for the minimum-income threshold. */
+  userAgeBand: ParentAgeBand;
+  partnerAgeBand: ParentAgeBand;
+  /** Does each parent expect to earn at least the minimum income for their age over the next 3 months? */
   userMeetsMinimumIncome: YesNoUnsure;
   partnerMeetsMinimumIncome: YesNoUnsure;
   /**
@@ -156,6 +168,8 @@ export interface TaxSlice {
 }
 
 export interface IncomeTaxResult {
+  /** Priority order in which the personal allowance was set against income components. */
+  allowanceOrder: ('non-savings' | 'savings' | 'dividends')[];
   personalAllowance: Pence;
   personalAllowanceUsed: Pence;
   taxableNonSavings: Pence;

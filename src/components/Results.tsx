@@ -44,7 +44,7 @@ export function KeyResults({ out }: { out: CalculationOutput }) {
         <div className="stat">
           <dt>Gross additional contribution to reach {formatGBP(optimiser.target, { decimals: 0 })}</dt>
           <dd className="stat-value" data-testid="required-gross">
-            {optimiser.alreadyMet ? 'None needed' : formatGBP(optimiser.requiredGross, { decimals: 0 })}
+            {optimiser.alreadyMet ? 'None needed' : optimiser.feasible ? formatGBP(optimiser.requiredGross, { decimals: 0 }) : 'Not reachable'}
           </dd>
           <dd className="stat-note">
             {optimiser.alreadyMet
@@ -55,7 +55,7 @@ export function KeyResults({ out }: { out: CalculationOutput }) {
           </dd>
         </div>
         <div className="stat">
-          <dt>Take-home pay impact at that contribution</dt>
+          <dt>Take-home pay impact {optimiser.feasible ? 'at that contribution' : `at the ${METHOD_LABELS[optimiser.method].toLowerCase()} maximum (${formatGBP(optimiser.maxFeasibleGross, { decimals: 0 })})`}</dt>
           <dd className="stat-value" data-testid="target-takehome">
             {atTargetChange ? formatGBP(atTargetChange.takeHome, { decimals: 0, signed: true }) : '—'}
           </dd>

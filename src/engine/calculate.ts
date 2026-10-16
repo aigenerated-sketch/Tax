@@ -39,14 +39,21 @@ export function scopeWarnings(inputs: CalculatorInputs, rules: TaxYearRules): Ca
     message:
       'Employee NI is calculated on an annual basis. Payroll assesses NI each pay period, so actual deductions can differ (for example in a bonus month).',
   });
-  if (rules.verificationStatus !== 'verified') {
+  if (rules.verification.ratesAndThresholds !== 'verified-official') {
     w.push({
       id: 'rules-provisional',
       severity: 'warning',
       category: 'scope',
-      message: `The ${rules.label} rules are provisional and have not been checked against final published figures.`,
+      message: `Not every ${rules.label} rate and threshold has been re-checked against official tables. ${rules.verification.summary}`,
     });
   }
+  w.push({
+    id: 'not-externally-validated',
+    severity: 'info',
+    category: 'scope',
+    message:
+      'These are estimates from an independent calculator. They have not been checked against HMRC’s own calculations or payroll software and are not an HMRC calculation.',
+  });
   if (inc.savingsInterest > 0 || inc.dividends > 0) {
     w.push({
       id: 'savings-dividends',
@@ -58,10 +65,10 @@ export function scopeWarnings(inputs: CalculatorInputs, rules: TaxYearRules): Ca
     if (inputs.jurisdiction === 'scotland') {
       w.push({
         id: 'scotland-psa',
-        severity: 'warning',
+        severity: 'info',
         category: 'scotland',
         message:
-          'For Scottish taxpayers the personal savings allowance band is estimated using UK thresholds. Your actual allowance may differ.',
+          'Scottish taxpayers: the personal savings allowance (£1,000 / £500 / £0) is set by the UK bands, as if you were not a Scottish taxpayer (ITA 2007 s12B), so it can differ from what your Scottish band suggests.',
       });
     }
   }
@@ -212,8 +219,8 @@ export function calculateAll(inputs: CalculatorInputs): CalculationOutput {
     optimiser.alreadyMet || optimiser.requiredGross === 0
       ? null
       : calculateScenario(inputs, { label: 'At target', method, additionalGross: optimiser.requiredGross });
-  const childcareBefore = assessChildcare(inputs.childcare, baseline.adjustedNetIncome, rules);
-  const childcareAfter = assessChildcare(inputs.childcare, proposed.adjustedNetIncome, rules);
+  const childcareBefore = assessChildcare(inputs.childcare, baseline.adjustedNetIncome, rules, baseline.cashPayAfterSacrifice);
+  const childcareAfter = assessChildcare(inputs.childcare, proposed.adjustedNetIncome, rules, proposed.cashPayAfterSacrifice);
   return {
     rules,
     jurisdiction: inputs.jurisdiction,

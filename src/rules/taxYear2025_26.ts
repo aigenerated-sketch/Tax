@@ -12,7 +12,15 @@ export const TAX_YEAR_2025_26: TaxYearRules = {
   label: '2025/26',
   startDate: '2025-04-06',
   endDate: '2026-04-05',
-  verificationStatus: 'verified',
+  verification: {
+    ratesAndThresholds: 'partially-verified',
+    legalRules: 'partially-verified',
+    implementationTests: 'partially-tested',
+    externalValidation: 'not-done',
+    summary:
+      'Income Tax bands (incl. Scotland), NI, student loan thresholds and NMW rates checked against the GOV.UK 2025-26 employer page and NMW page. Dividend rates, savings allowances, pension allowances and childcare figures for 2025/26 were not individually re-checked. Provided for comparison only.',
+  },
+  allowanceAllocation: 'most-favourable',
   dateVerified: '2026-10-16',
   notes: [
     'Plan 5 student loan repayments do not start until April 2026, so Plan 5 is not available for 2025/26.',

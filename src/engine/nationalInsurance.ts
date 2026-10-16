@@ -1,5 +1,5 @@
 import type { TaxYearRules } from '../rules/types';
-import { nonNeg, roundPence } from './money';
+import { applyRate, nonNeg } from './money';
 import type { NationalInsuranceResult, Pence } from './types';
 
 /**
@@ -12,8 +12,8 @@ export function employeeNi(earnings: Pence, rules: TaxYearRules): NationalInsura
   const e = nonNeg(earnings);
   const mainBandEarnings = nonNeg(Math.min(e, upperEarningsLimit) - primaryThreshold);
   const upperBandEarnings = nonNeg(e - upperEarningsLimit);
-  const mainBandNi = roundPence(mainBandEarnings * mainRate);
-  const upperBandNi = roundPence(upperBandEarnings * upperRate);
+  const mainBandNi = applyRate(mainBandEarnings, mainRate);
+  const upperBandNi = applyRate(upperBandEarnings, upperRate);
   return {
     earnings: e,
     mainBandEarnings,
@@ -27,5 +27,5 @@ export function employeeNi(earnings: Pence, rules: TaxYearRules): NationalInsura
 /** Employer Class 1 secondary NI, category A, annualised. Used only to estimate salary-sacrifice savings. */
 export function employerNi(earnings: Pence, rules: TaxYearRules): Pence {
   const { secondaryThreshold, employerRate } = rules.nationalInsurance;
-  return roundPence(nonNeg(earnings - secondaryThreshold) * employerRate);
+  return applyRate(nonNeg(earnings - secondaryThreshold), employerRate);
 }

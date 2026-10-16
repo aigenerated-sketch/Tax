@@ -230,7 +230,14 @@ export function Methodology() {
           const t = TAX_YEARS[id];
           return (
             <li key={id}>
-              {t.label} ({t.startDate} to {t.endDate}) — {t.verificationStatus}, checked {t.dateVerified}.
+              {t.label} ({t.startDate} to {t.endDate}), sources checked {t.dateVerified}:
+              <ul>
+                <li>Rates and thresholds: {t.verification.ratesAndThresholds}</li>
+                <li>Legal calculation rules: {t.verification.legalRules}</li>
+                <li>Implementation tests: {t.verification.implementationTests}</li>
+                <li>External validation against HMRC/payroll software: {t.verification.externalValidation}</li>
+              </ul>
+              {t.verification.summary}
               {t.notes.length > 0 && (
                 <ul>
                   {t.notes.map((n) => (
@@ -263,7 +270,7 @@ export function Methodology() {
         <li>Cash pay = salary + bonus − salary sacrifice. Employment income = cash pay − net-pay contributions + taxable benefits.</li>
         <li>Net income = employment income + property + other + savings + dividends.</li>
         <li>ANI = net income − relieved relief-at-source gross contributions − grossed-up Gift Aid.</li>
-        <li>Personal allowance from ANI; set against non-savings, then savings, then dividends.</li>
+        <li>Personal allowance from ANI; set against income components in the way that gives the lowest tax (ITA 2007 s25(2) — every priority order is tried; in practice this is non-savings first). From 2027-28 a fixed order applies (s25(3A)).</li>
         <li>Non-savings income taxed using the jurisdiction’s bands; savings and dividends using UK bands sitting on top. Relief-at-source and Gift Aid gross amounts extend the basic and higher rate limits.</li>
         <li>Employee NI and student loans on Class 1 earnings (cash pay).</li>
         <li>Take-home = cash income − Income Tax − employee NI − student loan − net-pay contributions − relief-at-source payments.</li>
@@ -347,11 +354,10 @@ export function Methodology() {
         <li>Self-employment profits and Class 2/4 NI; trading and property losses; property finance-cost credit and property allowance.</li>
         <li>Marriage Allowance, Married Couple’s Allowance, Blind Person’s Allowance and other reliefs.</li>
         <li>Non-residence, remittance basis, foreign income and double taxation.</li>
-        <li>Defined benefit pension input calculations (you must enter the figure from your scheme); lump-sum death benefits in the taper tests; scheme-specific caps.</li>
+        <li>Defined benefit pension input calculations (you must enter the figure from your scheme); the DB member’s own contributions in adjusted income (the whole DB input is added, which can overstate it); lump-sum death benefits in the taper tests; contributions after age 75; scheme-specific caps; refunds of excess contributions.</li>
         <li>National Minimum Wage limits on salary sacrifice; employer-specific salary-sacrifice terms.</li>
         <li>Student loan repayments on unearned income through Self Assessment; multiple undergraduate plans.</li>
         <li>Childcare schemes in Scotland, Wales and Northern Ireland other than Tax-Free Childcare; the child’s exact start-of-term dates.</li>
-        <li>Personal savings allowance band for Scottish taxpayers is estimated using UK thresholds.</li>
       </ul>
       <h2>Official sources</h2>
       <ul>
@@ -363,6 +369,7 @@ export function Methodology() {
       </ul>
       <h2>Version history</h2>
       <ul>
+        <li>1.2.0 (16 October 2026) — independent audit: annual allowance now counts contributions above the relief limit; other-scheme contributions; childcare minimum income by age; verification reported in four dimensions; personal allowance allocated by ITA s25(2). See docs/AUDIT_2026-10.md.</li>
         <li>1.1.0 (16 October 2026) — full 2026/27 rule-by-rule verification against GOV.UK and Scottish Government sources; single definition of net income; engine-level input and rule validation; Gift Aid 4× warning; results grouped by Income Tax, NI, pension and take-home with a reconciliation line.</li>
         <li>1.0.0 (16 October 2026) — first release: {r.label} and 2025/26 rules, England/Wales/NI and Scotland, four contribution methods, childcare, annual allowance, student loans, Child Benefit charge.</li>
       </ul>
@@ -400,7 +407,7 @@ export function Disclaimer() {
         <li>Pension savings are usually inaccessible until minimum pension age, and investments can fall as well as rise.</li>
         <li>Consider speaking to a regulated financial adviser, and confirm arrangements with your employer and pension scheme before acting.</li>
       </ul>
-      <p>The calculations have not been professionally certified. Every effort has been made to check them against official sources and hand-worked examples.</p>
+      <p>The calculations have not been professionally certified and have not been compared with HMRC’s own calculations or payroll software. Rates and rules were checked against official sources, and the engine is tested against hand-worked examples and a separately written reference calculation.</p>
     </Article>
   );
 }

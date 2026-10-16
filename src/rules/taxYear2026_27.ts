@@ -10,7 +10,15 @@ export const TAX_YEAR_2026_27: TaxYearRules = {
   label: '2026/27',
   startDate: '2026-04-06',
   endDate: '2027-04-05',
-  verificationStatus: 'verified',
+  verification: {
+    ratesAndThresholds: 'verified-official',
+    legalRules: 'partially-verified',
+    implementationTests: 'regression-tested',
+    externalValidation: 'not-done',
+    summary:
+      'All rates and thresholds checked against GOV.UK / gov.scot / HMRC on 16 October 2026. Most calculation rules checked against legislation or HMRC guidance; a few are modelling conventions (see the register). Hand-worked regression tests cover the engine. Results have NOT been compared with HMRC or payroll software.',
+  },
+  allowanceAllocation: 'most-favourable',
   dateVerified: '2026-10-16',
   notes: [
     'Scottish band limits are taken from the GOV.UK employer rates page (taxable income after the personal allowance). The build brief described the intermediate band as "the next £12,570"; the published band is £16,957–£31,092 of taxable income (£29,527–£43,662 of total income with a full personal allowance), and the published figure is used.',

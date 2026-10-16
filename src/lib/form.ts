@@ -6,6 +6,7 @@ import type {
   ExistingAmountBasis,
   Jurisdiction,
   PensionablePayBasis,
+  ParentAgeBand,
   PensionMethod,
   StudentLoanPlan,
   TaxYearId,
@@ -54,7 +55,8 @@ export interface FormState {
 
   definedBenefitMember: boolean;
   definedBenefitPensionInput: string;
-  otherPensionContributions: string;
+  otherPersonalRasGross: string;
+  otherEmployerContributions: string;
   mpaaTriggered: YesNoUnsure;
   carryForwardKnown: boolean;
   carryForward: string;
@@ -68,6 +70,8 @@ export interface FormState {
   hasPartner: YesNoUnsure;
   partnerAniKnown: boolean;
   partnerAni: string;
+  userAgeBand: ParentAgeBand;
+  partnerAgeBand: ParentAgeBand;
   userMeetsMinimumIncome: YesNoUnsure;
   partnerMeetsMinimumIncome: YesNoUnsure;
   taxFreeChildcareBars: YesNoUnsure;
@@ -110,19 +114,22 @@ export const defaultFormState = (): FormState => ({
   childBenefitAnnual: '',
   definedBenefitMember: false,
   definedBenefitPensionInput: '',
-  otherPensionContributions: '',
+  otherPersonalRasGross: '',
+  otherEmployerContributions: '',
   mpaaTriggered: 'unsure',
   carryForwardKnown: false,
   carryForward: '',
   childcareAssess: false,
   hasChild: 'unsure',
   childAge: 'unsure',
-  childDisabled: 'no',
+  childDisabled: 'unsure',
   usesTaxFreeChildcare: 'unsure',
   childcareNation: 'england',
   hasPartner: 'unsure',
   partnerAniKnown: false,
   partnerAni: '',
+  userAgeBand: 'unsure',
+  partnerAgeBand: 'unsure',
   userMeetsMinimumIncome: 'unsure',
   partnerMeetsMinimumIncome: 'unsure',
   taxFreeChildcareBars: 'unsure',
@@ -218,10 +225,16 @@ export function parseForm(f: FormState): ParseResult {
   const giftAidNet = money('giftAidNet', 'Gift Aid donations');
   const childBenefitAnnual = money('childBenefitAnnual', 'Child Benefit');
   const definedBenefitPensionInput = f.definedBenefitMember ? money('definedBenefitPensionInput', 'Defined benefit pension input') : 0;
-  const otherPensionContributions = money('otherPensionContributions', 'Other pension contributions');
+  const otherPersonalRasGross = money('otherPersonalRasGross', 'Other personal pension contributions');
+  const otherEmployerContributions = money('otherEmployerContributions', 'Employer contributions to other schemes');
+  const rules = getRules(f.taxYear);
+  if (rules && f.studentLoanPlan !== 'none' && !rules.studentLoans.plans[f.studentLoanPlan]) {
+    errors.studentLoanPlan = `This student loan plan is not available in ${rules.label}. Choose another plan or tax year.`;
+  }
   const carryForward = f.carryForwardKnown ? money('carryForward', 'Carry-forward', true) : null;
 
-  const partnerAni = f.childcareAssess && f.hasPartner === 'yes' && f.partnerAniKnown ? money('partnerAni', "Partner's adjusted net income", true) : null;
+  // Partner ANI is used by both the childcare checks and the Child Benefit charge, so it is parsed whenever entered.
+  const partnerAni = f.hasPartner === 'yes' && f.partnerAniKnown ? money('partnerAni', "Partner's adjusted net income", true) : null;
   const annualChildcareCost = f.annualChildcareCost.trim() === '' ? null : money('annualChildcareCost', 'Annual childcare cost');
   const providerHourlyRate = f.providerHourlyRate.trim() === '' ? null : money('providerHourlyRate', 'Hourly rate');
 
@@ -258,7 +271,8 @@ export function parseForm(f: FormState): ParseResult {
     pensionAllowance: {
       definedBenefitMember: f.definedBenefitMember,
       definedBenefitPensionInput,
-      otherPensionContributions,
+      otherPersonalRasGross,
+      otherEmployerContributions,
       mpaaTriggered: f.mpaaTriggered,
       carryForward,
     },
@@ -271,6 +285,8 @@ export function parseForm(f: FormState): ParseResult {
       nation: f.childcareNation,
       hasPartner: f.hasPartner,
       partnerAni,
+      userAgeBand: f.userAgeBand,
+      partnerAgeBand: f.partnerAgeBand,
       userMeetsMinimumIncome: f.userMeetsMinimumIncome,
       partnerMeetsMinimumIncome: f.partnerMeetsMinimumIncome,
       taxFreeChildcareBars: f.taxFreeChildcareBars,

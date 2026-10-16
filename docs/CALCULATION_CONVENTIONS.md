@@ -49,6 +49,11 @@ Relief at source and Gift Aid both reduce ANI **and** extend the bands. These ar
 separate statutory mechanisms (ITA 2007 s.58 and the basic/higher rate limit extension), not
 double counting: the band extension does not reduce taxable income.
 
+1.7 **Other schemes.** `otherPersonalRasGross` (a second personal relief-at-source contribution,
+e.g. an existing SIPP) is added to `G_ras` and behaves exactly like any other RAS contribution.
+`otherEmployerContributions` (employer contributions to other schemes) is added to employer
+contributions: pension input and adjusted income only. Neither changes between baseline and proposal.
+
 1.6 **Taxable earnings for the relief limit** `TE = E_NI + BiK` (GOV.UK pension schemes rates:
 relief limited to the higher of 100% of UK taxable earnings and £3,600). Net-pay and RAS
 contributions together share this limit; RAS above it is treated as unrelieved and does not
@@ -58,7 +63,11 @@ reduce ANI.
 
 `PA = max(0, £12,570 − floor((floor(ANI to £) − £100,000) / 2))` when ANI > £100,000.
 £1 is lost for each **complete** £2. This rounding is a convention (see uncertainty U4).
-PA is set against non-savings income, then savings, then dividends, once only.
+PA is set against income components "in the way which will result in the greatest reduction" in tax (ITA 2007
+s25(2), 2026-27 and earlier): every priority order of non-savings / savings / dividends is evaluated and
+the lowest liability kept (ties → non-savings first). The allowance is used once only (s25(6)). From
+2027-28 s25(3A) fixes the order (non-property/savings/dividend income first); the rule file field
+`allowanceAllocation` selects the behaviour per tax year.
 
 ## 3. Income Tax
 
@@ -81,7 +90,9 @@ relief GOV.UK lists for Scottish taxpayers (none at 19%, 1% at 21%, 22% at 42%, 
 when it does not know about RAS or Gift Aid). **Relief to claim** = tax before claims − final
 tax. It is shown separately and is assumed claimed in take-home figures.
 
-3.6 Each band amount is rounded to the nearest penny; total tax = sum of bands.
+3.6 Each band amount × rate is computed exactly in integer basis points and rounded half-up to the
+penny (`money.applyRate`); total tax = sum of bands. NI uses the same rounding; student loans and the
+HICBC round down. Every rate in a rule file must be a whole number of basis points (`validateRules`).
 
 ## 4. Employee National Insurance
 
@@ -104,9 +115,14 @@ components separately; childcare value is never part of them.
 
 ## 6. Annual allowance (estimate)
 
-Pension input (DC) = `SS + NP + G_ras,rel + employer contributions + other contributions`; plus
-DB pension input entered by the user.
-Threshold income = `NI_net − G_ras,rel + SS`. Adjusted income = `NI_net + NP + SS + employer + DB input`.
+Pension input (DC) = `SS + NP + G_ras + employer contributions` (FA 2004 s233(1)) — **all** RAS
+contributions paid, including any part above the relief limit, because "relievable pension
+contributions" (s188) are not capped by earnings; the s190 limit restricts relief only. Plus the DB
+pension input entered by the user.
+Threshold income = `NI_net + SS − G_ras,rel` (s228ZA(5): only RAS contributions *entitled to relief*
+are deducted; Gift Aid is not deducted). Adjusted income = `NI_net + NP + PIA − personal
+contributions` = `NI_net + NP + SS + employer + DB input` (s228ZA(4); DB member contributions are not
+collected, so this can overstate adjusted income for DB members).
 Taper when threshold income > £200,000 **and** adjusted income > £260,000; £1 per complete £2,
 minimum £10,000. MPAA (if triggered and DC > £10,000): DC excess charged; DB tested against the
 alternative allowance; carry-forward only adds to the alternative allowance (PTM055100).
@@ -114,7 +130,10 @@ Charge = extra Income Tax when the excess is added on top of non-savings income.
 
 ## 7. Childcare
 
-Each scheme is assessed condition by condition. Any failed condition → "Not eligible"; else any
+Each scheme is assessed condition by condition. The minimum-income threshold depends on each
+parent's age band (21+, 18–20, under 18 or apprentice); if the band is "Not sure" all three amounts
+are shown. The user's own answer decides the condition; an estimate from annual pay after salary
+sacrifice ÷ 4 is shown as a hint only and never turns "Not sure" into "met". Any failed condition → "Not eligible"; else any
 "Not sure"/missing material answer → "Eligibility not confirmed"; else "Appears eligible on the
 answers given". The user's ANI is taken from the scenario; the partner's ANI is entered.
 

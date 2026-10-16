@@ -14,11 +14,21 @@ export type TaxYearId = '2025-26' | '2026-27';
 
 export type Jurisdiction = 'england' | 'wales' | 'northern-ireland' | 'scotland';
 
-export type VerificationStatus =
-  /** Figures checked against the cited official source on `dateVerified`. */
-  | 'verified'
-  /** Figures announced but not yet checked against a published official table. */
-  | 'provisional';
+/**
+ * Evidence for a rule set, kept as four separate dimensions so that accurately transcribed
+ * figures are never presented as proof that the calculations are correct.
+ */
+export interface VerificationProfile {
+  /** 1. Rates and thresholds checked against official published tables. */
+  ratesAndThresholds: 'verified-official' | 'partially-verified' | 'unverified';
+  /** 2. Legal calculation rules (ordering, definitions) checked against legislation / HMRC guidance. */
+  legalRules: 'verified-official' | 'partially-verified' | 'unverified';
+  /** 3. Implementation covered by hand-worked regression tests. */
+  implementationTests: 'regression-tested' | 'partially-tested' | 'untested';
+  /** 4. Results compared with an independent external calculator (HMRC, payroll software, adviser). */
+  externalValidation: 'done' | 'not-done';
+  summary: string;
+}
 
 export interface TaxBand {
   /** Short machine name, e.g. "basic". */
@@ -62,8 +72,14 @@ export interface TaxYearRules {
   label: string;
   startDate: string; // ISO date, inclusive
   endDate: string; // ISO date, inclusive
-  verificationStatus: VerificationStatus;
+  verification: VerificationProfile;
+  /** Date the official sources for rates and thresholds were last checked. */
   dateVerified: string;
+  /**
+   * How allowances are set against income components (ITA 2007 s25). 'most-favourable' = s25(2)
+   * for years before 2027-28; 'non-savings-first' = the s25(3A) ordering from 2027-28.
+   */
+  allowanceAllocation: 'most-favourable' | 'non-savings-first';
   notes: string[];
 
   personalAllowance: {

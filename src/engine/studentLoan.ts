@@ -1,5 +1,5 @@
 import type { TaxYearRules } from '../rules/types';
-import { floorPence, nonNeg } from './money';
+import { applyRateDown, nonNeg } from './money';
 import type { Pence, StudentLoanInputs, StudentLoanResult } from './types';
 
 /**
@@ -16,12 +16,12 @@ export function studentLoanRepayment(
   let plan = 0;
   if (input.plan !== 'none') {
     const rule = rules.studentLoans.plans[input.plan];
-    if (rule) plan = floorPence(nonNeg(niEarnings - rule.threshold) * rule.rate);
+    if (rule) plan = applyRateDown(nonNeg(niEarnings - rule.threshold), rule.rate);
   }
   let postgraduate = 0;
   if (input.postgraduate) {
     const rule = rules.studentLoans.postgraduate;
-    postgraduate = floorPence(nonNeg(niEarnings - rule.threshold) * rule.rate);
+    postgraduate = applyRateDown(nonNeg(niEarnings - rule.threshold), rule.rate);
   }
   return { earnings: niEarnings, plan, postgraduate, total: plan + postgraduate };
 }

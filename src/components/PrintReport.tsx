@@ -52,7 +52,7 @@ export function PrintReport({ out, inputs, notes, generatedAt }: { out: Calculat
     <article className="print-report" aria-hidden="true">
       <h1>Pension contribution summary — UK £100k Tax Trap Calculator</h1>
       <p>
-        Generated {formatDate(generatedAt)} · Tax year {rules.label} · {jurisdiction} rules · Rules verified {rules.dateVerified}
+        Generated {formatDate(generatedAt)} · Tax year {rules.label} · {jurisdiction} rules · Rates checked against official sources on {rules.dateVerified} · Not checked against HMRC or payroll software
       </p>
       <p>{jurisdictionBasis(inputs.jurisdiction)}</p>
       <p className="print-disclaimer">

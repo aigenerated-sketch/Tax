@@ -82,6 +82,12 @@ export const SOURCES = {
     title: 'Review of the automatic enrolment earnings trigger and qualifying earnings band for 2026/27 (GOV.UK)',
     url: 'https://www.gov.uk/government/publications/review-of-the-automatic-enrolment-earnings-trigger-and-qualifying-earnings-band-for-202627/review-of-the-automatic-enrolment-earnings-trigger-and-qualifying-earnings-band-for-202627',
   },
+  itaS12: { id: 'ita-2007-s12', title: 'Income Tax Act 2007 s12: income charged at the starting rate for savings (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2007/3/section/12' },
+  itaS12B: { id: 'ita-2007-s12b', title: 'Income Tax Act 2007 s12B: savings allowance (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2007/3/section/12B' },
+  itaS25: { id: 'ita-2007-s25', title: 'Income Tax Act 2007 s25: reliefs and allowances deducted at Steps 2 and 3 (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2007/3/section/25' },
+  faS188: { id: 'fa-2004-s188', title: 'Finance Act 2004 s188: relief for contributions — relievable pension contributions (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/188' },
+  faS228ZA: { id: 'fa-2004-s228za', title: 'Finance Act 2004 s228ZA: tapered reduction of annual allowance (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/228ZA' },
+  faS233: { id: 'fa-2004-s233', title: 'Finance Act 2004 s233: pension input amounts, other money purchase arrangements (legislation.gov.uk)', url: 'https://www.legislation.gov.uk/ukpga/2004/12/section/233' },
   budgetAnnex: {
     id: 'budget-2025-annex-a',
     title: 'Budget 2025 overview of tax legislation and rates, Annex A: rates and allowances (GOV.UK)',

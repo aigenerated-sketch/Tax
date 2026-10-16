@@ -15,7 +15,8 @@ export class InvalidInputsError extends Error {
   }
 }
 
-const isRate = (r: number) => Number.isFinite(r) && r >= 0 && r <= 1;
+/** A rate in [0,1] expressed in whole basis points (required by money.applyRate). */
+const isRate = (r: number) => Number.isFinite(r) && r >= 0 && r <= 1 && Math.abs(r * 10_000 - Math.round(r * 10_000)) < 1e-6;
 const isPence = (v: number) => Number.isFinite(v) && Number.isInteger(v) && v >= 0;
 
 function checkBands(name: string, set: IncomeTaxBandSet, out: string[]) {
@@ -76,7 +77,8 @@ export function validateInputs(i: CalculatorInputs): string[] {
   money('giftAidNet', i.giftAidNet);
   money('childBenefitAnnual', i.childBenefitAnnual);
   money('pensionAllowance.definedBenefitPensionInput', i.pensionAllowance.definedBenefitPensionInput);
-  money('pensionAllowance.otherPensionContributions', i.pensionAllowance.otherPensionContributions);
+  money('pensionAllowance.otherPersonalRasGross', i.pensionAllowance.otherPersonalRasGross);
+  money('pensionAllowance.otherEmployerContributions', i.pensionAllowance.otherEmployerContributions);
   money('pensionAllowance.carryForward', i.pensionAllowance.carryForward);
   money('childcare.partnerAni', i.childcare.partnerAni);
   money('childcare.annualChildcareCost', i.childcare.annualChildcareCost);

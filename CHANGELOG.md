@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0 — 2026-10-16 (independent audit)
+
+- F1: annual allowance pension input now includes relief-at-source contributions above the relief limit (FA 2004 s233, s188).
+- F2: separate inputs for other personal (relief-at-source) contributions and employer contributions to other schemes.
+- F3: childcare minimum income by each parent's age band; pay-based hint never resolves "Not sure"; pence formatting fix.
+- F4: Plan 5 in 2025/26 is a visible error. F5: partner ANI used for the HICBC without a childcare assessment.
+- F6: child disability defaults to "Not sure". F7: verification reported in four separate dimensions; wording tightened.
+- F8: personal allowance allocated by ITA s25(2) "greatest reduction" (no numeric change found for 2026/27).
+- Exact integer basis-point rounding; independent reference calculator, sweeps, optimiser validity and boundary tests (463 tests).
+- PSA for Scottish taxpayers and Gift Aid in the annual allowance taper confirmed from legislation.
+
 ## 1.1.0 — 2026-10-16
 
 - Validated every 2026/27 rate, threshold and rule against GOV.UK, HMRC manuals and the Scottish Government; register in `docs/RULES_VERIFICATION.md` (generated) and on `/methodology`.

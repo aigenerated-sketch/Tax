@@ -62,13 +62,14 @@ describe('High Income Child Benefit Charge', () => {
 });
 
 describe('annual allowance', () => {
-  const allowance: PensionAllowanceInputs = { definedBenefitMember: false, definedBenefitPensionInput: 0, otherPensionContributions: 0, mpaaTriggered: 'no', carryForward: 0 };
+  const allowance: PensionAllowanceInputs = { definedBenefitMember: false, definedBenefitPensionInput: 0, otherPersonalRasGross: 0, otherEmployerContributions: 0, mpaaTriggered: 'no', carryForward: 0 };
   const run = (netIncome: number, employer: number, extra: Partial<typeof allowance> = {}) =>
     annualAllowanceCheck({
       rules: R26,
       allowance: { ...allowance, ...extra },
       pension: { ...emptyPension(), employerOther: p(employer) },
       rasRelievedGross: 0,
+      rasGross: 0,
       netIncome: p(netIncome),
       chargeFor: (x) => Math.round(x * 0.45),
     });
